@@ -1,0 +1,17 @@
+{
+  "id": "E07",
+  "name": "Power Bound & Multiplicative Law",
+  "claim": "Lem 6.2 (kappa in [0,1]) + Thm 6.4 (1 - prod(1-kappa_i))",
+  "kind": "identity",
+  "passed": true,
+  "max_error": 2.220446049250313e-16,
+  "n_trials": 2500,
+  "detail": {
+    "power_in_unit_interval": true,
+    "min_measured_power": 0.0005481420361976338,
+    "max_measured_power": 0.998678505879182,
+    "n_stacks": 500,
+    "max_abs_error_empirical_vs_closed_form": 2.220446049250313e-16,
+    "note": "Sequential catalysts multiply residual above-floor distance; composite power matches 1 - prod(1-kappa_i) to machine precision."
+  }
+}

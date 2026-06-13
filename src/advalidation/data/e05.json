@@ -1,0 +1,23 @@
+{
+  "id": "E05",
+  "name": "Decoder Locus (three exhaustive mechanisms)",
+  "claim": "Thm 4.2 (decoder locus)",
+  "kind": "structural",
+  "passed": true,
+  "max_error": 0.0,
+  "n_trials": 200,
+  "detail": {
+    "mechanism_a_reperception_fire_rate": 0.905,
+    "mechanism_b_reinference_fire_rate": 1.0,
+    "mechanism_c_reframing_fire_rate": 1.0,
+    "applicable_cases": {
+      "a": 200,
+      "b": 200,
+      "c": 200
+    },
+    "noop_left_response_unchanged": 200,
+    "fire_rate_threshold": 0.8,
+    "exhaustiveness_holds": true,
+    "note": "Each of (a) re-perception, (b) re-inference, (c) re-framing moves the response in every applicable case; with all three fixed (no-op), S is invariant."
+  }
+}

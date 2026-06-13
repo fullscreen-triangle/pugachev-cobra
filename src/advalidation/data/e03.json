@@ -1,0 +1,18 @@
+{
+  "id": "E03",
+  "name": "Cell-Truth (in-cell percepts are S-indistinguishable)",
+  "claim": "Thm 3.2 (Cell-Truth)",
+  "kind": "identity",
+  "passed": true,
+  "max_error": 0.0,
+  "n_trials": 9365,
+  "detail": {
+    "incell_evaluations": 3365,
+    "outcell_evaluations": 6000,
+    "max_incell_deviation_from_beta": 0.0,
+    "incell_S_equals_beta": true,
+    "min_outcell_excess_above_beta": 0.025297562000621276,
+    "outcell_strictly_above_floor": true,
+    "note": "In-cell S collapses to beta (flat); out-of-cell S is strictly above beta. The floor is attained on the cell."
+  }
+}

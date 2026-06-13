@@ -1,0 +1,306 @@
+{
+  "suite": "Coordinate Theory of Advertising -- numerical validation",
+  "paper": "publications/advertising-coordinate-receivers/advertising-coordinate-receiverts.tex",
+  "seed": 20260613,
+  "n_experiments": 11,
+  "n_passed": 11,
+  "all_passed": true,
+  "elapsed_seconds": 5.1373,
+  "experiments": [
+    {
+      "id": "E01",
+      "name": "Floor Theorem & No Perfect Persuasion",
+      "claim": "Thm 2.2 (Floor) + Cor 2.3 (no S=0)",
+      "kind": "bound",
+      "passed": true,
+      "max_error": 0.0,
+      "n_trials": 8000,
+      "detail": {
+        "n_receivers": 200,
+        "all_floors_positive": true,
+        "bound_S_geq_beta_holds": true,
+        "min_floor_beta_observed": 2.6917492612620086,
+        "min_S_observed": 2.6917492612620086,
+        "min_margin_S_minus_beta": 0.0,
+        "Sigma": 100.0,
+        "note": "S >= beta > 0 confirmed across all receivers; no evaluation reached S = 0."
+      }
+    },
+    {
+      "id": "E02",
+      "name": "Point-Value Forbidden (granular meaning)",
+      "claim": "Thm 3.5 (point-value forbidden)",
+      "kind": "structural",
+      "passed": true,
+      "max_error": 0.0,
+      "n_trials": 150,
+      "detail": {
+        "n_receivers": 150,
+        "all_projections_nonsingleton": true,
+        "min_over_receivers_of_max_projection_size": 17.0,
+        "coarsening_monotone_beta_and_projsize": true,
+        "coarsening_sweep": [
+          {
+            "m_codewords": 64,
+            "beta": 4.10385857229964,
+            "avg_proj_size": 9.375
+          },
+          {
+            "m_codewords": 32,
+            "beta": 5.166820673887546,
+            "avg_proj_size": 18.75
+          },
+          {
+            "m_codewords": 16,
+            "beta": 7.307797037592808,
+            "avg_proj_size": 37.5
+          },
+          {
+            "m_codewords": 8,
+            "beta": 11.806582746591015,
+            "avg_proj_size": 75.0
+          },
+          {
+            "m_codewords": 4,
+            "beta": 17.04120469433428,
+            "avg_proj_size": 150.0
+          }
+        ],
+        "note": "Pi(D(x)) never collapses to a singleton; value resolves to cells. Coarser codebooks raise beta and projection size."
+      }
+    },
+    {
+      "id": "E03",
+      "name": "Cell-Truth (in-cell percepts are S-indistinguishable)",
+      "claim": "Thm 3.2 (Cell-Truth)",
+      "kind": "identity",
+      "passed": true,
+      "max_error": 0.0,
+      "n_trials": 9365,
+      "detail": {
+        "incell_evaluations": 3365,
+        "outcell_evaluations": 6000,
+        "max_incell_deviation_from_beta": 0.0,
+        "incell_S_equals_beta": true,
+        "min_outcell_excess_above_beta": 0.025297562000621276,
+        "outcell_strictly_above_floor": true,
+        "note": "In-cell S collapses to beta (flat); out-of-cell S is strictly above beta. The floor is attained on the cell."
+      }
+    },
+    {
+      "id": "E04",
+      "name": "Representational Invariance (isometry preserves S)",
+      "claim": "Thm 3.7 (representational invariance)",
+      "kind": "identity",
+      "passed": true,
+      "max_error": 5.329070518200751e-15,
+      "n_trials": 400,
+      "detail": {
+        "transforms": "random rotation + translation; reflection on 1/3 of cases",
+        "max_abs_error_S_orig_vs_transported": 5.329070518200751e-15,
+        "note": "S is invariant under isometric re-encoding of the carrier; meaning lives one level above its representation."
+      }
+    },
+    {
+      "id": "E05",
+      "name": "Decoder Locus (three exhaustive mechanisms)",
+      "claim": "Thm 4.2 (decoder locus)",
+      "kind": "structural",
+      "passed": true,
+      "max_error": 0.0,
+      "n_trials": 200,
+      "detail": {
+        "mechanism_a_reperception_fire_rate": 0.905,
+        "mechanism_b_reinference_fire_rate": 1.0,
+        "mechanism_c_reframing_fire_rate": 1.0,
+        "applicable_cases": {
+          "a": 200,
+          "b": 200,
+          "c": 200
+        },
+        "noop_left_response_unchanged": 200,
+        "fire_rate_threshold": 0.8,
+        "exhaustiveness_holds": true,
+        "note": "Each of (a) re-perception, (b) re-inference, (c) re-framing moves the response in every applicable case; with all three fixed (no-op), S is invariant."
+      }
+    },
+    {
+      "id": "E06",
+      "name": "Carrier-Shift Decoupling (advert unit)",
+      "claim": "Thm 5.4 (decoupling: multi-realisability, receiver-relativity, binding)",
+      "kind": "structural",
+      "passed": true,
+      "max_error": 0.0,
+      "n_trials": 200,
+      "detail": {
+        "clause_i_multiple_realisability_cases": 195,
+        "clause_ii_receiver_relativity_cases": 157,
+        "clause_iii_binding_consistent_cases": 186,
+        "threshold_per_clause": 120,
+        "binding_max_per_case_mismatch": 7.0,
+        "note": "Same shift via distinct carriers; same carrier, different shift across receivers; carrier and shift conjugate under D."
+      }
+    },
+    {
+      "id": "E07",
+      "name": "Power Bound & Multiplicative Law",
+      "claim": "Lem 6.2 (kappa in [0,1]) + Thm 6.4 (1 - prod(1-kappa_i))",
+      "kind": "identity",
+      "passed": true,
+      "max_error": 2.220446049250313e-16,
+      "n_trials": 2500,
+      "detail": {
+        "power_in_unit_interval": true,
+        "min_measured_power": 0.0005481420361976338,
+        "max_measured_power": 0.998678505879182,
+        "n_stacks": 500,
+        "max_abs_error_empirical_vs_closed_form": 2.220446049250313e-16,
+        "note": "Sequential catalysts multiply residual above-floor distance; composite power matches 1 - prod(1-kappa_i) to machine precision."
+      }
+    },
+    {
+      "id": "E08",
+      "name": "Diminishing Returns & Frequency Saturation",
+      "claim": "Cor 6.5 (diminishing returns) + Cor 6.6 (frequency saturation)",
+      "kind": "identity",
+      "passed": true,
+      "max_error": 2.220446049250313e-16,
+      "n_trials": 9000,
+      "detail": {
+        "n_cases": 300,
+        "n_steps": 30,
+        "n_step_power_matches_1_minus_(1-kappa)^n": true,
+        "cumulative_power_monotone_increasing": true,
+        "marginal_gain_strictly_decaying": true,
+        "finite_n_power_below_one": true,
+        "max_formula_error": 2.220446049250313e-16,
+        "note": "Repetition yields geometric, bounded gains; each exposure closes strictly less distance; power -> 1 but never reaches it -- diversify routes rather than multiply impressions."
+      }
+    },
+    {
+      "id": "E09",
+      "name": "Campaign Saturation (Borel-Cantelli dichotomy)",
+      "claim": "Thm 6.8 (saturate iff sum kappa_i = infinity)",
+      "kind": "boundary",
+      "passed": true,
+      "max_error": 0.0,
+      "n_trials": 4,
+      "detail": {
+        "horizon_N": 100000,
+        "sequences": [
+          {
+            "sequence": "constant_0.1",
+            "sum_of_powers_at_N": 10000.0,
+            "sum_of_powers_at_N_over_10": 999.9999999999999,
+            "sum_diverges_predicted": true,
+            "residual_at_N": 0.0,
+            "residual_at_N_over_10": 0.0,
+            "shrink_ratio_N_vs_N10": 0.0,
+            "still_vanishing": true,
+            "plateaued": false,
+            "saturates_observed": true
+          },
+          {
+            "sequence": "harmonic_1/i",
+            "sum_of_powers_at_N": 11.090156129763429,
+            "sum_of_powers_at_N_over_10": 8.787706026045381,
+            "sum_diverges_predicted": true,
+            "residual_at_N": 9.999900000999986e-06,
+            "residual_at_N_over_10": 9.99900009999001e-05,
+            "shrink_ratio_N_vs_N10": 0.10000899991000077,
+            "still_vanishing": true,
+            "plateaued": false,
+            "saturates_observed": true
+          },
+          {
+            "sequence": "geometric_2^-i",
+            "sum_of_powers_at_N": 0.5,
+            "sum_of_powers_at_N_over_10": 0.5,
+            "sum_diverges_predicted": false,
+            "residual_at_N": 0.5775761901732048,
+            "residual_at_N_over_10": 0.5775761901732048,
+            "shrink_ratio_N_vs_N10": 1.0,
+            "still_vanishing": false,
+            "plateaued": true,
+            "saturates_observed": false
+          },
+          {
+            "sequence": "p_series_1/i^2",
+            "sum_of_powers_at_N": 0.6449240669982241,
+            "sum_of_powers_at_N_over_10": 0.6448340818460602,
+            "sum_diverges_predicted": false,
+            "residual_at_N": 0.5000049999500006,
+            "residual_at_N_over_10": 0.5000499950005,
+            "shrink_ratio_N_vs_N10": 0.9999100188962119,
+            "still_vanishing": false,
+            "plateaued": true,
+            "saturates_observed": false
+          }
+        ],
+        "dichotomy_holds": true,
+        "saturation_criterion": "residual keeps vanishing as horizon grows (shrink ratio N/10 -> N below 0.5) for divergent sums; plateaus (ratio > 0.99) for convergent sums",
+        "note": "Divergent-sum power sequences drive residual toward 0 in the limit (still vanishing at the horizon); convergent-sum sequences stall above the floor. Long-run effectiveness needs non-summable fresh routes."
+      }
+    },
+    {
+      "id": "E10",
+      "name": "Coherence: Linear Failure & the Rule of Three",
+      "claim": "Thm 7.2 (linear failure) + Thm 7.4 (coherence triangle)",
+      "kind": "structural",
+      "passed": true,
+      "max_error": 0.0,
+      "n_trials": 804,
+      "detail": {
+        "acyclic_graphs_have_ungrounded_source": true,
+        "dags_tested": 800,
+        "theta": 0.5,
+        "cycle_length_analysis": {
+          "cycle_len_1": {
+            "strongly_connected": false,
+            "supporters_per_node": 0,
+            "majority_independent_check": false,
+            "grounds_advert": false
+          },
+          "cycle_len_2": {
+            "strongly_connected": true,
+            "supporters_per_node": 1,
+            "majority_independent_check": false,
+            "grounds_advert": false
+          },
+          "cycle_len_3": {
+            "strongly_connected": true,
+            "supporters_per_node": 2,
+            "majority_independent_check": true,
+            "grounds_advert": true
+          },
+          "cycle_len_4": {
+            "strongly_connected": true,
+            "supporters_per_node": 3,
+            "majority_independent_check": true,
+            "grounds_advert": true
+          }
+        },
+        "necessity_min_grounding_cycle_is_3": true,
+        "triangle_robust_to_single_deletion": true,
+        "note": "Linear/acyclic support is ungrounded; 1- and 2-cycles fail the independent-majority test; the 3-cycle grounds the advert and survives losing any one effect."
+      }
+    },
+    {
+      "id": "E11",
+      "name": "Ordinal Detectability of Incoherence",
+      "claim": "Cor 7.5 (incoherence detectable from signs alone)",
+      "kind": "structural",
+      "passed": true,
+      "max_error": 0.0,
+      "n_trials": 2000,
+      "detail": {
+        "sign_vs_magnitude_agreement_rate": 1.0,
+        "coherent_detection_rate": 1.0,
+        "incoherent_detection_rate": 1.0,
+        "n_coherent": 1025,
+        "n_incoherent": 975,
+        "note": "Sign-only support relations reproduce the magnitude-based coherence verdict and reliably flag chains whose effects imply contradictory termini -- the DSL assessor needs no magnitudes and no meaning dictionary."
+      }
+    }
+  ]
+}

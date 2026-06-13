@@ -1,0 +1,17 @@
+{
+  "id": "E06",
+  "name": "Carrier-Shift Decoupling (advert unit)",
+  "claim": "Thm 5.4 (decoupling: multi-realisability, receiver-relativity, binding)",
+  "kind": "structural",
+  "passed": true,
+  "max_error": 0.0,
+  "n_trials": 200,
+  "detail": {
+    "clause_i_multiple_realisability_cases": 195,
+    "clause_ii_receiver_relativity_cases": 157,
+    "clause_iii_binding_consistent_cases": 186,
+    "threshold_per_clause": 120,
+    "binding_max_per_case_mismatch": 7.0,
+    "note": "Same shift via distinct carriers; same carrier, different shift across receivers; carrier and shift conjugate under D."
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "id": "E02",
+  "name": "Point-Value Forbidden (granular meaning)",
+  "claim": "Thm 3.5 (point-value forbidden)",
+  "kind": "structural",
+  "passed": true,
+  "max_error": 0.0,
+  "n_trials": 150,
+  "detail": {
+    "n_receivers": 150,
+    "all_projections_nonsingleton": true,
+    "min_over_receivers_of_max_projection_size": 17.0,
+    "coarsening_monotone_beta_and_projsize": true,
+    "coarsening_sweep": [
+      {
+        "m_codewords": 64,
+        "beta": 4.10385857229964,
+        "avg_proj_size": 9.375
+      },
+      {
+        "m_codewords": 32,
+        "beta": 5.166820673887546,
+        "avg_proj_size": 18.75
+      },
+      {
+        "m_codewords": 16,
+        "beta": 7.307797037592808,
+        "avg_proj_size": 37.5
+      },
+      {
+        "m_codewords": 8,
+        "beta": 11.806582746591015,
+        "avg_proj_size": 75.0
+      },
+      {
+        "m_codewords": 4,
+        "beta": 17.04120469433428,
+        "avg_proj_size": 150.0
+      }
+    ],
+    "note": "Pi(D(x)) never collapses to a singleton; value resolves to cells. Coarser codebooks raise beta and projection size."
+  }
+}

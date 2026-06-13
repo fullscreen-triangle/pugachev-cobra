@@ -1,0 +1,65 @@
+{
+  "id": "E09",
+  "name": "Campaign Saturation (Borel-Cantelli dichotomy)",
+  "claim": "Thm 6.8 (saturate iff sum kappa_i = infinity)",
+  "kind": "boundary",
+  "passed": true,
+  "max_error": 0.0,
+  "n_trials": 4,
+  "detail": {
+    "horizon_N": 100000,
+    "sequences": [
+      {
+        "sequence": "constant_0.1",
+        "sum_of_powers_at_N": 10000.0,
+        "sum_of_powers_at_N_over_10": 999.9999999999999,
+        "sum_diverges_predicted": true,
+        "residual_at_N": 0.0,
+        "residual_at_N_over_10": 0.0,
+        "shrink_ratio_N_vs_N10": 0.0,
+        "still_vanishing": true,
+        "plateaued": false,
+        "saturates_observed": true
+      },
+      {
+        "sequence": "harmonic_1/i",
+        "sum_of_powers_at_N": 11.090156129763429,
+        "sum_of_powers_at_N_over_10": 8.787706026045381,
+        "sum_diverges_predicted": true,
+        "residual_at_N": 9.999900000999986e-06,
+        "residual_at_N_over_10": 9.99900009999001e-05,
+        "shrink_ratio_N_vs_N10": 0.10000899991000077,
+        "still_vanishing": true,
+        "plateaued": false,
+        "saturates_observed": true
+      },
+      {
+        "sequence": "geometric_2^-i",
+        "sum_of_powers_at_N": 0.5,
+        "sum_of_powers_at_N_over_10": 0.5,
+        "sum_diverges_predicted": false,
+        "residual_at_N": 0.5775761901732048,
+        "residual_at_N_over_10": 0.5775761901732048,
+        "shrink_ratio_N_vs_N10": 1.0,
+        "still_vanishing": false,
+        "plateaued": true,
+        "saturates_observed": false
+      },
+      {
+        "sequence": "p_series_1/i^2",
+        "sum_of_powers_at_N": 0.6449240669982241,
+        "sum_of_powers_at_N_over_10": 0.6448340818460602,
+        "sum_diverges_predicted": false,
+        "residual_at_N": 0.5000049999500006,
+        "residual_at_N_over_10": 0.5000499950005,
+        "shrink_ratio_N_vs_N10": 0.9999100188962119,
+        "still_vanishing": false,
+        "plateaued": true,
+        "saturates_observed": false
+      }
+    ],
+    "dichotomy_holds": true,
+    "saturation_criterion": "residual keeps vanishing as horizon grows (shrink ratio N/10 -> N below 0.5) for divergent sums; plateaus (ratio > 0.99) for convergent sums",
+    "note": "Divergent-sum power sequences drive residual toward 0 in the limit (still vanishing at the horizon); convergent-sum sequences stall above the floor. Long-run effectiveness needs non-summable fresh routes."
+  }
+}

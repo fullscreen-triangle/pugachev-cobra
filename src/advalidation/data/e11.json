@@ -1,0 +1,17 @@
+{
+  "id": "E11",
+  "name": "Ordinal Detectability of Incoherence",
+  "claim": "Cor 7.5 (incoherence detectable from signs alone)",
+  "kind": "structural",
+  "passed": true,
+  "max_error": 0.0,
+  "n_trials": 2000,
+  "detail": {
+    "sign_vs_magnitude_agreement_rate": 1.0,
+    "coherent_detection_rate": 1.0,
+    "incoherent_detection_rate": 1.0,
+    "n_coherent": 1025,
+    "n_incoherent": 975,
+    "note": "Sign-only support relations reproduce the magnitude-based coherence verdict and reliably flag chains whose effects imply contradictory termini -- the DSL assessor needs no magnitudes and no meaning dictionary."
+  }
+}

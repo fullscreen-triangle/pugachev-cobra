@@ -1,0 +1,14 @@
+{
+  "id": "E04",
+  "name": "Representational Invariance (isometry preserves S)",
+  "claim": "Thm 3.7 (representational invariance)",
+  "kind": "identity",
+  "passed": true,
+  "max_error": 5.329070518200751e-15,
+  "n_trials": 400,
+  "detail": {
+    "transforms": "random rotation + translation; reflection on 1/3 of cases",
+    "max_abs_error_S_orig_vs_transported": 5.329070518200751e-15,
+    "note": "S is invariant under isometric re-encoding of the carrier; meaning lives one level above its representation."
+  }
+}

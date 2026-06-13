@@ -1,0 +1,19 @@
+{
+  "id": "E01",
+  "name": "Floor Theorem & No Perfect Persuasion",
+  "claim": "Thm 2.2 (Floor) + Cor 2.3 (no S=0)",
+  "kind": "bound",
+  "passed": true,
+  "max_error": 0.0,
+  "n_trials": 8000,
+  "detail": {
+    "n_receivers": 200,
+    "all_floors_positive": true,
+    "bound_S_geq_beta_holds": true,
+    "min_floor_beta_observed": 2.6917492612620086,
+    "min_S_observed": 2.6917492612620086,
+    "min_margin_S_minus_beta": 0.0,
+    "Sigma": 100.0,
+    "note": "S >= beta > 0 confirmed across all receivers; no evaluation reached S = 0."
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "E08",
+  "name": "Diminishing Returns & Frequency Saturation",
+  "claim": "Cor 6.5 (diminishing returns) + Cor 6.6 (frequency saturation)",
+  "kind": "identity",
+  "passed": true,
+  "max_error": 2.220446049250313e-16,
+  "n_trials": 9000,
+  "detail": {
+    "n_cases": 300,
+    "n_steps": 30,
+    "n_step_power_matches_1_minus_(1-kappa)^n": true,
+    "cumulative_power_monotone_increasing": true,
+    "marginal_gain_strictly_decaying": true,
+    "finite_n_power_below_one": true,
+    "max_formula_error": 2.220446049250313e-16,
+    "note": "Repetition yields geometric, bounded gains; each exposure closes strictly less distance; power -> 1 but never reaches it -- diversify routes rather than multiply impressions."
+  }
+}

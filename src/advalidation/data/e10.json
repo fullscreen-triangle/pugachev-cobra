@@ -1,0 +1,43 @@
+{
+  "id": "E10",
+  "name": "Coherence: Linear Failure & the Rule of Three",
+  "claim": "Thm 7.2 (linear failure) + Thm 7.4 (coherence triangle)",
+  "kind": "structural",
+  "passed": true,
+  "max_error": 0.0,
+  "n_trials": 804,
+  "detail": {
+    "acyclic_graphs_have_ungrounded_source": true,
+    "dags_tested": 800,
+    "theta": 0.5,
+    "cycle_length_analysis": {
+      "cycle_len_1": {
+        "strongly_connected": false,
+        "supporters_per_node": 0,
+        "majority_independent_check": false,
+        "grounds_advert": false
+      },
+      "cycle_len_2": {
+        "strongly_connected": true,
+        "supporters_per_node": 1,
+        "majority_independent_check": false,
+        "grounds_advert": false
+      },
+      "cycle_len_3": {
+        "strongly_connected": true,
+        "supporters_per_node": 2,
+        "majority_independent_check": true,
+        "grounds_advert": true
+      },
+      "cycle_len_4": {
+        "strongly_connected": true,
+        "supporters_per_node": 3,
+        "majority_independent_check": true,
+        "grounds_advert": true
+      }
+    },
+    "necessity_min_grounding_cycle_is_3": true,
+    "triangle_robust_to_single_deletion": true,
+    "note": "Linear/acyclic support is ungrounded; 1- and 2-cycles fail the independent-majority test; the 3-cycle grounds the advert and survives losing any one effect."
+  }
+}
