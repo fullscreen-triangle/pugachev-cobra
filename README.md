@@ -1,6 +1,11 @@
-# pugachev-cobra
+<h1 align="center">Pugachev Cobra</h1>
+<p align="center"><em>An Equivalence Calculus for Bounded Cognition: The S-Entropy Framework</em></p>
 
-pugachev-cobra is a domain-specific language for composing video advertisements
+<p align="center">
+  <img src="assets/img/SAAB_35_Draken_performing_the_Cobra_maneuver.gif" alt="Logo" width="300"/>
+</p>
+
+Pugachev-cobra is a domain-specific language for composing video advertisements
 from behavioural effect chains. The language targets the Remotion rendering
 framework and is grounded in a formal theory of bounded receivers, information
 catalysts, and decoder-shift mechanics developed across companion papers on
