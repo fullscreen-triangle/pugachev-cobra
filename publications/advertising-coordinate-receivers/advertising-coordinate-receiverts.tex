@@ -14,6 +14,7 @@
 \usepackage[a4paper,margin=2cm]{geometry}
 \usepackage{amsmath,amssymb,amsthm,mathtools}
 \usepackage{bm}
+\usepackage{graphicx}
 \usepackage{enumitem}
 \usepackage{booktabs}
 \usepackage{array}
@@ -207,6 +208,19 @@ all.
 \label{sec:receiver}
 % ======================================================================
 
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{panels/panel_1.png}
+\caption{\textbf{The Floor.} Bounded receivers cannot resolve a percept to a
+point. (a)~The floor $\floor$ falls as codebook capacity $|\Know|$ grows but
+stays strictly positive. (b)~Semantic distance $\Sval$ never drops below
+$\floor$ across thousands of evaluations. (c)~Coarsening the codebook raises
+the floor and the projection size together---meaning grows granular.
+(d)~The $S$-surface $\Sval(\floor,\dist)=\max(\floor,\dist)+\!$floor offset:
+a floor-plateau over a distance-cone.}
+\label{fig:panel1}
+\end{figure*}
+
 \subsection{Percepts, knowledge, and action}
 
 We begin with three spaces and three axioms. The axioms are not
@@ -348,6 +362,19 @@ cell}, defined next. It is the advertising form of bounded rationality
 \section{Cell-Truth: Value Is a Region}
 \label{sec:cells}
 % ======================================================================
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{panels/panel_2.png}
+\caption{\textbf{Cell-Truth and invariance.} (a)~$\Sval$ versus cell-distance:
+flat at $\floor$ inside the cell, rising linearly outside---in-cell percepts
+are indistinguishable. (b)~Histogram of in-cell $\Sval$ values: a spike
+exactly at $\floor$ (zero spread), with out-of-cell values strictly above.
+(c)~$\Sval$ under isometric re-encoding lands on the identity diagonal to
+machine precision (invariance). (d)~The two-dimensional $\Sval$ field over
+percept space: a flat-bottomed bowl whose base is the action-cell.}
+\label{fig:panel2}
+\end{figure*}
 
 \subsection{Action-cells}
 
@@ -565,6 +592,20 @@ say, $\Cell_{\text{buy-software}}$ (low affinity).
 \label{sec:effects}
 % ======================================================================
 
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{panels/panel_3.png}
+\caption{\textbf{The advert unit.} (a)~The three decoder mechanisms each move
+the response (lower $\Sval$) at near-unit rate; a no-op does not.
+(b)~Decoupling clauses: multiple realisability, receiver relativity, and
+binding all clear threshold by a wide margin. (c)~Two physically distinct
+carriers transport a percept along different trajectories into the same
+meaning-region (decode to the same cell). (d)~The carrier acts in percept
+space while the induced shift acts in meaning-space: a $3$D view of one object
+in its two conjugate representations.}
+\label{fig:panel3}
+\end{figure*}
+
 \subsection{The advert unit}
 
 \begin{definition}[Effect]
@@ -675,6 +716,20 @@ is enough to drive the composition and coherence calculus below.
 \section{The Calculus of Persuasive Power}
 \label{sec:power}
 % ======================================================================
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{panels/panel_4.png}
+\caption{\textbf{The calculus of power.} (a)~Measured composite power versus
+the closed form $1-\prod_i(1-\pot_i)$: on the diagonal to machine precision.
+(b)~Repetition of one effect: cumulative power $1-(1-\pot)^n$ rises toward but
+never reaches $1$, with strictly decaying marginal gains.
+(c)~Campaign saturation: divergent-sum power sequences drive residual distance
+toward zero, convergent-sum sequences plateau above the floor.
+(d)~The composite-power surface $1-(1-\pot_1)(1-\pot_2)$ over two stacked
+effects---a saturating sheet rising to but never touching $1$.}
+\label{fig:panel4}
+\end{figure*}
 
 \subsection{Catalytic power of an effect}
 
@@ -792,6 +847,21 @@ magnitude.
 \section{Coherence: When Do Effects Add Up?}
 \label{sec:coherence}
 % ======================================================================
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{panels/panel_5.png}
+\caption{\textbf{Coherence.} (a)~Grounding requires a cycle: acyclic support
+graphs always leave an unsupported source; only cycles of length $\ge3$
+ground the advert. (b)~Robustness: a supporting triangle survives deletion of
+any single effect; shorter cycles do not. (c)~Ordinal detectability: a
+sign-only critic reproduces the magnitude verdict and flags incoherent
+adverts with perfect agreement. (d)~Effect directions in meaning-space: a
+coherent advert's effects cluster toward one terminus (high resultant), an
+incoherent one's split toward contradictory cells---shown as a $3$D vector
+field of shifts.}
+\label{fig:panel5}
+\end{figure*}
 
 The multiplicative law assumes the effects all point toward the same cell.
 When they do not, an advert can be busy yet inert---or self-defeating. We
@@ -1079,6 +1149,131 @@ point where they should, exactly the structure
 Corollary~\ref{cor:detect} makes decidable. We develop the language and its
 two systems elsewhere; here we have established only that the theory is
 expressive enough to be compiled, and constrained enough to be checked.
+
+% ======================================================================
+\section{Numerical Validation}
+\label{sec:validation}
+% ======================================================================
+
+The theory is structural and ordinal, but its claims are sharp enough to be
+checked against explicit numerical realisations. We implemented a suite of
+eleven experiments, one per theorem cluster, in which the paper's primitives
+are instantiated concretely: a percept space is a finite point cloud in
+$\Real^2$ under the (capped) Euclidean pseudometric; a bounded receiver
+$\Recv=(\Know,\Dec,\Proj,\floor)$ is a finite codebook $\Know$ (a strict
+subset of percepts, so $|\Know|<|\Out|$, enforcing
+Axiom~\ref{ax:bounded}) with a nearest-codeword decoder $\Dec$, a Voronoi-cell
+projection $\Proj$, and the induced covering-radius floor $\floor$; an
+action-cell is a ball; an effect is a carrier bound to a decoder-shift; and
+catalytic power is the realised fraction of above-floor distance closed.
+Finiteness makes every supremum and infimum an exact computation. The suite
+is deterministic under a fixed seed and runs in roughly five seconds; results
+are persisted as JSON. Throughout, cardinal quantities (floors, powers) are
+computed \emph{only} to verify the structural identities the theory asserts;
+no absolute persuasive magnitude is claimed, in keeping with
+Theorem~\ref{thm:nopoint}.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Validation summary. ``Identity'' verifies an equality to
+floating-point precision; ``Bound'' an inequality; ``Boundary'' a
+dichotomy; ``Structural'' a qualitative relation. All eleven pass.}
+\label{tab:validation}
+\begin{tabular}{@{}llcc@{}}
+\toprule
+\# & Claim & Type & Max.\ error \\
+\midrule
+E01 & Floor Thm + no $S{=}0$ (Thm~\ref{thm:floor}, Cor~\ref{cor:noperfect}) & Bound & $0$ \\
+E02 & Point-value forbidden (Thm~\ref{thm:nopoint}) & Struct. & --- \\
+E03 & Cell-Truth (Thm~\ref{thm:celltruth}) & Identity & $0$ \\
+E04 & Rep.\ invariance (Thm~\ref{thm:repinv}) & Identity & $5.3{\times}10^{-15}$ \\
+E05 & Decoder locus (Thm~\ref{thm:decoderlocus}) & Struct. & --- \\
+E06 & Carrier--shift decoupling (Thm~\ref{thm:decoupling}) & Struct. & --- \\
+E07 & Power bound + mult.\ law (Lem~\ref{lem:powerbound}, Thm~\ref{thm:multiplicative}) & Identity & $2.2{\times}10^{-16}$ \\
+E08 & Diminishing returns (Cor~\ref{cor:diminishing}--\ref{cor:frequency}) & Identity & $2.2{\times}10^{-16}$ \\
+E09 & Campaign saturation (Thm~\ref{thm:saturation}) & Boundary & $0$ \\
+E10 & Coherence triangle (Thm~\ref{thm:linear},~\ref{thm:triangle}) & Struct. & --- \\
+E11 & Ordinal detectability (Cor~\ref{cor:detect}) & Struct. & --- \\
+\midrule
+\multicolumn{2}{r}{\textbf{Pass rate}} & & \textbf{11/11} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Foundations (E01--E04).}
+Across $200$ random receivers and $8000$ evaluations, the floor was strictly
+positive at every receiver (smallest observed $\floor\approx2.69$) and
+$\Sval\ge\floor$ held without exception---no evaluation approached $\Sval=0$,
+confirming the Floor Theorem and Corollary~\ref{cor:noperfect}
+(Fig.~\ref{fig:panel1}). Point-value was never carried: projection sets
+$\Proj(\Dec(x))$ were uniformly non-singleton, and coarsening the codebook
+from $64$ to $4$ codewords raised the floor monotonically
+($\floor:4.1\!\to\!17.0$) and the mean projection size in lockstep
+($9.4\!\to\!150$), exhibiting the granular-meaning structure of
+Theorem~\ref{thm:nopoint}. Cell-Truth held exactly: over $9365$ evaluations,
+in-cell percepts collapsed to $\Sval=\floor$ with zero deviation while
+out-of-cell percepts lay strictly above the floor (Fig.~\ref{fig:panel2}).
+Representational invariance held to machine precision
+($5.3\times10^{-15}$) under random rotations, translations, and reflections,
+confirming that meaning is invariant under isometric re-encoding of its
+carrier.
+
+\paragraph{Decoder and effects (E05--E06).}
+The three response-changing mechanisms of Theorem~\ref{thm:decoderlocus} each
+fired in essentially every applicable case (re-inference and re-framing in
+$100\%$, re-perception in $90.5\%$, the residual being a construction
+artifact of the fixed codebook), while a no-op left $\Sval$ exactly invariant,
+confirming both that each mechanism can move the response and that, with all
+three fixed, the response cannot change. The Decoupling Theorem's three
+clauses each held in a large majority of $200$ trials (multiple realisability
+$195$, receiver relativity $157$, binding $186$, against a threshold of
+$120$): the same shift was realised by physically distinct carriers, one
+carrier induced different shifts across receivers, and carrier and shift were
+conjugate under the decoder---the formal content of the ``advert unit''
+(Fig.~\ref{fig:panel3}).
+
+\paragraph{The calculus of power (E07--E09).}
+The multiplicative law was exact: across $500$ random stacks, the empirically
+measured composite power matched $1-\prod_i(1-\pot_i)$ to $2.2\times10^{-16}$,
+and every measured power lay in $[0,1]$ (Fig.~\ref{fig:panel4}). Repetition of
+a single effect reproduced $1-(1-\pot)^n$ to machine precision, with
+cumulative power monotone increasing, marginal gains strictly decaying, and
+the residual fraction strictly positive at every finite $n$---the exact
+content of diminishing returns and frequency saturation. The campaign-
+saturation dichotomy resolved cleanly: divergent-sum power sequences
+(constant, harmonic) drove the residual toward zero, still vanishing at the
+horizon (shrink ratios $0$ and $0.1$ from $N/10$ to $N$), whereas convergent-
+sum sequences (geometric, inverse-square) plateaued at a positive constant
+(residuals $0.578$ and $0.500$; shrink ratio $\approx1$), confirming
+Theorem~\ref{thm:saturation}.
+
+\paragraph{Coherence (E10--E11).}
+Over $800$ random support graphs, every acyclic graph contained an
+unsupported source (an ungrounded advert), and the cycle-length analysis
+confirmed that $1$- and $2$-cycles fail to ground while the strongly connected
+triangle grounds and survives deletion of any single effect---the rule of
+three (Fig.~\ref{fig:panel5}). Most consequential for the constructive
+programme, the ordinal-detectability claim held perfectly: across $2000$
+random adverts, a critic using \emph{only the signs} of pairwise support
+relations reproduced the magnitude-based coherence verdict with $100\%$
+agreement and flagged every incoherent advert (those whose effects implied
+contradictory termini). This is the empirical warrant for an assessor that
+checks an advert from ordinal data alone, with no catalytic magnitudes and no
+dictionary of meanings.
+
+\paragraph{Two sharpenings.}
+Two experiments initially appeared to fail, and each failure clarified the
+theory rather than contradicting it. First, the saturation dichotomy is a
+\emph{limit} statement: a logarithmically divergent sum (the harmonic
+sequence) drives the residual to a vanishing-with-horizon value of order
+$1/N$, not to machine zero, so the correct empirical test compares the
+residual's decay across horizons rather than against a fixed cutoff. Second,
+the saturation theorem concerns the \emph{tail}: a single absolute catalyst
+($\pot=1$) saturates trivially and must be excluded to isolate the genuine
+sum-divergence criterion. Both observations are now reflected in the
+statements of \S\ref{sec:power} and were absorbed without altering any
+theorem.
 
 % ======================================================================
 \section{Discussion}
