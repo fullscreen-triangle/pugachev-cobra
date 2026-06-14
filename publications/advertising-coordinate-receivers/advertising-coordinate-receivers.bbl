@@ -1,0 +1,151 @@
+\begin{thebibliography}{24}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Aaker(1991)]{aaker1991}
+David~A. Aaker.
+\newblock \emph{Managing Brand Equity}.
+\newblock The Free Press, New York, 1991.
+
+\bibitem[Akerlof(1970)]{akerlof1970}
+George~A. Akerlof.
+\newblock The market for ``lemons'': Quality uncertainty and the market
+  mechanism.
+\newblock \emph{The Quarterly Journal of Economics}, 84\penalty0 (3):\penalty0
+  488--500, 1970.
+
+\bibitem[Bagwell(2007)]{bagwell2007}
+Kyle Bagwell.
+\newblock The economic analysis of advertising.
+\newblock \emph{Handbook of Industrial Organization}, 3:\penalty0 1701--1844,
+  2007.
+
+\bibitem[Barthes(1977)]{barthes1977}
+Roland Barthes.
+\newblock \emph{Image-Music-Text}.
+\newblock Hill and Wang, New York, 1977.
+\newblock Trans. Stephen Heath.
+
+\bibitem[Becker and Murphy(1993)]{becker1993}
+Gary~S. Becker and Kevin~M. Murphy.
+\newblock A simple theory of advertising as a good or bad.
+\newblock \emph{The Quarterly Journal of Economics}, 108\penalty0 (4):\penalty0
+  941--964, 1993.
+
+\bibitem[Dixit and Norman(1978)]{dixit1978}
+Avinash Dixit and Victor Norman.
+\newblock Advertising and welfare.
+\newblock \emph{The Bell Journal of Economics}, 9\penalty0 (1):\penalty0 1--17,
+  1978.
+
+\bibitem[Gigerenzer and Goldstein(1996)]{gigerenzer1996}
+Gerd Gigerenzer and Daniel~G. Goldstein.
+\newblock Reasoning the fast and frugal way: Models of bounded rationality.
+\newblock \emph{Psychological Review}, 103\penalty0 (4):\penalty0 650--669,
+  1996.
+
+\bibitem[Grossman and Stiglitz(1980)]{grossman1980}
+Sanford~J. Grossman and Joseph~E. Stiglitz.
+\newblock On the impossibility of informationally efficient markets.
+\newblock \emph{The American Economic Review}, 70\penalty0 (3):\penalty0
+  393--408, 1980.
+
+\bibitem[Kahneman(2011)]{kahneman2011}
+Daniel Kahneman.
+\newblock \emph{Thinking, Fast and Slow}.
+\newblock Farrar, Straus and Giroux, New York, 2011.
+
+\bibitem[Keller(1993)]{keller1993}
+Kevin~Lane Keller.
+\newblock Conceptualizing, measuring, and managing customer-based brand equity.
+\newblock \emph{Journal of Marketing}, 57\penalty0 (1):\penalty0 1--22, 1993.
+
+\bibitem[Krugman(1965)]{krugman1965}
+Herbert~E. Krugman.
+\newblock The impact of television advertising: Learning without involvement.
+\newblock \emph{Public Opinion Quarterly}, 29\penalty0 (3):\penalty0 349--356,
+  1965.
+
+\bibitem[McCracken(1988)]{mccracken1988}
+Grant McCracken.
+\newblock \emph{Culture and Consumption: New Approaches to the Symbolic
+  Character of Consumer Goods and Activities}.
+\newblock Indiana University Press, Bloomington, 1988.
+
+\bibitem[Mick(1986)]{mick1986}
+David~Glen Mick.
+\newblock Consumer research and semiotics: Exploring the morphology of signs,
+  symbols, and significance.
+\newblock \emph{Journal of Consumer Research}, 13\penalty0 (2):\penalty0
+  196--213, 1986.
+
+\bibitem[Milgrom and Roberts(1986)]{milgrom1986}
+Paul Milgrom and John Roberts.
+\newblock Price and advertising signals of product quality.
+\newblock \emph{Journal of Political Economy}, 94\penalty0 (4):\penalty0
+  796--821, 1986.
+
+\bibitem[Nelson(1974)]{nelson1974}
+Phillip Nelson.
+\newblock Advertising as information.
+\newblock \emph{Journal of Political Economy}, 82\penalty0 (4):\penalty0
+  729--754, 1974.
+
+\bibitem[Petty et~al.(1983)Petty, Cacioppo, and Schumann]{petty1983}
+Richard~E. Petty, John~T. Cacioppo, and David Schumann.
+\newblock Central and peripheral routes to advertising effectiveness: The
+  moderating role of involvement.
+\newblock \emph{Journal of Consumer Research}, 10\penalty0 (2):\penalty0
+  135--146, 1983.
+
+\bibitem[Simon(1955)]{simon1955}
+Herbert~A. Simon.
+\newblock A behavioral model of rational choice.
+\newblock \emph{The Quarterly Journal of Economics}, 69\penalty0 (1):\penalty0
+  99--118, 1955.
+
+\bibitem[Simon(1956)]{simon1956}
+Herbert~A. Simon.
+\newblock Rational choice and the structure of the environment.
+\newblock \emph{Psychological Review}, 63\penalty0 (2):\penalty0 129--138,
+  1956.
+
+\bibitem[Spence(1973)]{spence1973}
+Michael Spence.
+\newblock Job market signaling.
+\newblock \emph{The Quarterly Journal of Economics}, 87\penalty0 (3):\penalty0
+  355--374, 1973.
+
+\bibitem[Stigler(1961)]{stigler1961}
+George~J. Stigler.
+\newblock The economics of information.
+\newblock \emph{Journal of Political Economy}, 69\penalty0 (3):\penalty0
+  213--225, 1961.
+
+\bibitem[Tellis(1988)]{tellis1988}
+Gerard~J. Tellis.
+\newblock Advertising exposure, loyalty, and brand purchase: A two-stage model
+  of choice.
+\newblock \emph{Journal of Marketing Research}, 25\penalty0 (2):\penalty0
+  134--144, 1988.
+
+\bibitem[Tversky and Kahneman(1981)]{tversky1981}
+Amos Tversky and Daniel Kahneman.
+\newblock The framing of decisions and the psychology of choice.
+\newblock \emph{Science}, 211\penalty0 (4481):\penalty0 453--458, 1981.
+
+\bibitem[Vakratsas and Ambler(1999)]{vakratsas1999}
+Demetrios Vakratsas and Tim Ambler.
+\newblock How advertising works: What do we really know?
+\newblock \emph{Journal of Marketing}, 63\penalty0 (1):\penalty0 26--43, 1999.
+
+\bibitem[Zajonc(1968)]{zajonc1968}
+Robert~B. Zajonc.
+\newblock Attitudinal effects of mere exposure.
+\newblock \emph{Journal of Personality and Social Psychology}, 9\penalty0 (2,
+  Pt.2):\penalty0 1--27, 1968.
+
+\end{thebibliography}
