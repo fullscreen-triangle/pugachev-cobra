@@ -118,7 +118,20 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): string {
   lines.push(`// Scene: ${sceneName}`);
   lines.push(`// ============================================================`);
   lines.push(``);
+  // Separate camera primitives from visual/temporal/acoustic primitives
+  const cameraPrims = allPrims.filter(p => getPrimitiveHint(p.primitive).startsWith('camera:'));
+  const effectPrims = allPrims.filter(p => !getPrimitiveHint(p.primitive).startsWith('camera:'));
+
+  const hasCameras = cameraPrims.length > 0;
+
   lines.push(`import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Video, Audio, Sequence } from 'remotion';`);
+  if (hasCameras) {
+    lines.push(`import { Canvas } from '@react-three/fiber';`);
+    lines.push(`import { OrbitControls } from '@react-three/drei';`);
+    // Import the specific camera components needed
+    const cameraImports = [...new Set(cameraPrims.map(p => emitCameraImport(p)))].filter(Boolean);
+    for (const imp of cameraImports) lines.push(imp);
+  }
   lines.push(``);
   lines.push(`export const ${toCamelCase(sceneName)}: React.FC = () => {`);
   lines.push(`  const frame = useCurrentFrame();`);
@@ -126,8 +139,8 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): string {
   lines.push(`  const t = frame / fps; // time in seconds`);
   lines.push(``);
 
-  // Emit interpolations for each primitive
-  for (const prim of allPrims) {
+  // Emit interpolations for each non-camera primitive
+  for (const prim of effectPrims) {
     lines.push(...emitPrimitive(prim, fps));
   }
 
@@ -139,14 +152,26 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): string {
     lines.push(`      <Video src="${clip.path}" startFrom={${Math.round(clip.at * fps)}} />`);
   }
 
-  // Emit visual layer for each spatial/photometric primitive
-  const visualPrims = allPrims.filter(p => p.namespace === 'spatial' || p.namespace === 'photometric');
+  // Emit visual layer for each spatial/photometric (non-camera) primitive
+  const visualPrims = effectPrims.filter(p => p.namespace === 'spatial' || p.namespace === 'photometric');
   if (visualPrims.length > 0) {
     lines.push(`      <AbsoluteFill style={{`);
     for (const prim of visualPrims) {
       lines.push(...emitStyleProp(prim));
     }
     lines.push(`      }} />`);
+  }
+
+  // Emit R3F Canvas with camera primitives when present
+  if (hasCameras) {
+    lines.push(`      <AbsoluteFill>`);
+    lines.push(`        <Canvas>`);
+    for (const cam of cameraPrims) {
+      lines.push(...emitCameraJSX(cam));
+    }
+    lines.push(`          <OrbitControls />`);
+    lines.push(`        </Canvas>`);
+    lines.push(`      </AbsoluteFill>`);
   }
 
   lines.push(`    </AbsoluteFill>`);
@@ -294,4 +319,112 @@ function getPrimitiveHint(name: string): string {
 function toCamelCase(s: string): string {
   return s.replace(/[-_\s]+(.)/g, (_, c) => c.toUpperCase())
     .replace(/^(.)/, c => c.toUpperCase());
+}
+
+// ---- Camera emitter helpers -----------------------------------------
+
+// Returns the import statement for the camera component needed by this prim.
+function emitCameraImport(prim: IRPrim): string {
+  const hint = getPrimitiveHint(prim.primitive);
+  switch (hint) {
+    case 'camera:perspective':
+      return `import { MEEPerspectiveCamera } from '@/lib/cameras';`;
+    case 'camera:orthographic':
+      return `import { MEEOrthographicCamera } from '@/lib/cameras';`;
+    case 'camera:shake':
+      return `import { MEECameraShake } from '@/lib/cameras';`;
+    case 'camera:transition':
+      return `import { MEECameraTransition } from '@/lib/cameras';`;
+    case 'camera:cube':
+      return `import { MEECubeCamera } from '@/lib/cameras';`;
+    case 'camera:map':
+      return `import { MEEOrthographicCamera } from '@/lib/cameras';\nimport { MapControls } from '@react-three/drei';`;
+    default:
+      return '';
+  }
+}
+
+// Returns the JSX lines that instantiate a camera primitive inside a Canvas.
+function emitCameraJSX(prim: IRPrim): string[] {
+  const hint = getPrimitiveHint(prim.primitive);
+  const p = prim.params;
+  const lines: string[] = [];
+
+  switch (hint) {
+    case 'camera:perspective': {
+      const fov       = p.fov ?? 50;
+      const near      = p.near ?? 0.1;
+      const far       = p.far ?? 1000;
+      const pos       = p.position ?? [0, 0, 5];
+      const track     = p.trackMouse ?? false;
+      const radius    = p.trackRadius ?? 5;
+      lines.push(
+        `          <MEEPerspectiveCamera fov={${fov}} near={${near}} far={${far}} ` +
+        `position={[${(pos as number[]).join(', ')}]} ` +
+        `trackMouse={${track}} trackRadius={${radius}} />`
+      );
+      break;
+    }
+    case 'camera:orthographic': {
+      const zoom = p.zoom ?? 50;
+      const near = p.near ?? 0.1;
+      const far  = p.far ?? 1000;
+      const pos  = p.position ?? [0, 0, 10];
+      lines.push(
+        `          <MEEOrthographicCamera zoom={${zoom}} near={${near}} far={${far}} ` +
+        `position={[${(pos as number[]).join(', ')}]} />`
+      );
+      break;
+    }
+    case 'camera:shake': {
+      const intensity     = p.intensity ?? 0.5;
+      const decay         = p.decay ?? false;
+      const decayRate     = p.decayRate ?? 0.65;
+      const maxYaw        = p.maxYaw ?? 0.05;
+      const maxPitch      = p.maxPitch ?? 0.05;
+      const maxRoll       = p.maxRoll ?? 0.05;
+      const yawFreq       = p.yawFrequency ?? 0.8;
+      const pitchFreq     = p.pitchFrequency ?? 0.8;
+      const rollFreq      = p.rollFrequency ?? 0.8;
+      lines.push(
+        `          <MEECameraShake intensity={${intensity}} decay={${decay}} decayRate={${decayRate}} ` +
+        `maxYaw={${maxYaw}} maxPitch={${maxPitch}} maxRoll={${maxRoll}} ` +
+        `yawFrequency={${yawFreq}} pitchFrequency={${pitchFreq}} rollFrequency={${rollFreq}} />`
+      );
+      break;
+    }
+    case 'camera:transition': {
+      const initial  = p.initial ?? 'perspective';
+      const fov      = p.perspectiveFov ?? 50;
+      const zoom     = p.orthographicZoom ?? 100;
+      lines.push(
+        `          <MEECameraTransition initial="${initial}" perspectiveFov={${fov}} orthographicZoom={${zoom}} />`
+      );
+      break;
+    }
+    case 'camera:cube': {
+      const res    = p.resolution ?? 256;
+      const near   = p.near ?? 0.1;
+      const far    = p.far ?? 1000;
+      const frames = p.frames ?? 'Infinity';
+      lines.push(`          <MEECubeCamera resolution={${res}} near={${near}} far={${far}} frames={${frames}}>`);
+      lines.push(`            {(envTex) => null /* attach envTex to materials */}`);
+      lines.push(`          </MEECubeCamera>`);
+      break;
+    }
+    case 'camera:map': {
+      const pos  = p.position ?? [0, 5, 0];
+      const zoom = p.zoom ?? 1;
+      const far  = p.far ?? 10000;
+      lines.push(
+        `          <MEEOrthographicCamera position={[${(pos as number[]).join(', ')}]} zoom={${zoom}} far={${far}} />`
+      );
+      lines.push(`          <MapControls />`);
+      break;
+    }
+    default:
+      lines.push(`          {/* unknown camera primitive: ${prim.primitive} */}`);
+  }
+
+  return lines;
 }
