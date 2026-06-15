@@ -37,7 +37,7 @@ export interface CameraShakeProps {
 
 type ControlsProto = {
   update(): void;
-  target: THREE.Vector3;
+  target: { x: number; y: number; z: number };
   addEventListener: (event: string, callback: (event: unknown) => void) => void;
   removeEventListener: (event: string, callback: (event: unknown) => void) => void;
 };
