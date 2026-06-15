@@ -7,11 +7,26 @@ import { Montserrat } from "next/font/google";
 import Head from "next/head";
 import { useRouter } from "next/router";
 
-// If loading a variable font, you don't need to specify the font weight
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-mont" });
 
 export default function App({ Component, pageProps }) {
   const router = useRouter();
+
+  // Pages can export getLayout to take full control of the shell
+  const getLayout = Component.getLayout;
+  if (getLayout) {
+    return (
+      <>
+        <Head>
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
+        <AnimatePresence initial={false} mode="wait">
+          {getLayout(<Component key={router.asPath} {...pageProps} />)}
+        </AnimatePresence>
+      </>
+    );
+  }
 
   return (
     <>
