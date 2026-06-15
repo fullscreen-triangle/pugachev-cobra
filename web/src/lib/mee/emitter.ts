@@ -8,6 +8,7 @@
 import {
   SceneNode, PipelineStep,
   IRNode, IRClip, IRPrim, IRCompose, IRHole,
+  IRDetect, IRSelect, IRObjectEffect,
 } from './types';
 import { PrimitiveSpec, resolvePrimitive, deriveChain } from './registry';
 
@@ -99,6 +100,38 @@ function buildStep(step: PipelineStep, _resolved: PrimitiveSpec[]): IRNode | nul
     case 'Render':
       return null; // render directive handled by emitter metadata
 
+    case 'Detect':
+      return {
+        kind: 'IRDetect',
+        targets: step.targets,
+        minConfidence: step.minConfidence,
+      } satisfies IRDetect;
+
+    case 'Select':
+      return {
+        kind: 'IRSelect',
+        selector: step.selector,
+      } satisfies IRSelect;
+
+    case 'ApplyToSelection': {
+      const effects: IRObjectEffect[] = step.effects.map(eff => ({
+        kind: 'IRObjectEffect' as const,
+        effect: eff.name,
+        params: eff.params,
+      }));
+      // Wrap multiple effects in a compose; single effect returned directly
+      if (effects.length === 1) return effects[0];
+      return { kind: 'IRCompose', steps: effects };
+    }
+
+    case 'ForEach': {
+      // Flatten for_each body into a compose of object effects
+      const bodyNodes: IRNode[] = step.body
+        .map(s => buildStep(s, _resolved))
+        .filter((n): n is IRNode => n !== null);
+      return { kind: 'IRCompose', steps: bodyNodes };
+    }
+
     default:
       return null;
   }
@@ -106,10 +139,17 @@ function buildStep(step: PipelineStep, _resolved: PrimitiveSpec[]): IRNode | nul
 
 // ---- Remotion emitter -----------------------------------------------
 
-export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): string {
+export interface EmitResult {
+  composition: string;
+  worker: string | null; // non-null when the scene uses cameras (offscreen rendering)
+}
+
+export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResult {
   const clip = findClip(ir);
   const durationFrames = clip ? Math.ceil(clip.duration * fps) : fps * 30;
   const allPrims = collectPrims(ir);
+  const detectionNodes = collectDetect(ir);
+  const selectNode = collectSelect(ir);
 
   const lines: string[] = [];
 
@@ -123,16 +163,28 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): string {
   const effectPrims = allPrims.filter(p => !getPrimitiveHint(p.primitive).startsWith('camera:'));
 
   const hasCameras = cameraPrims.length > 0;
+  const hasDetection = detectionNodes.length > 0;
 
   lines.push(`import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Video, Audio, Sequence } from 'remotion';`);
   if (hasCameras) {
-    lines.push(`import { Canvas } from '@react-three/fiber';`);
+    lines.push(`import { Canvas } from '@react-three/offscreen';`);
     lines.push(`import { OrbitControls } from '@react-three/drei';`);
     // Import the specific camera components needed
     const cameraImports = [...new Set(cameraPrims.map(p => emitCameraImport(p)))].filter(Boolean);
     for (const imp of cameraImports) lines.push(imp);
   }
+  if (hasDetection) {
+    lines.push(`import { ObjectDetection } from '@/lib/detection/remotion/ObjectDetection';`);
+    lines.push(`import { SkeletonOverlay } from '@/lib/detection/remotion/SkeletonOverlay';`);
+  }
   lines.push(``);
+  if (hasCameras) {
+    lines.push(`// Worker created once at module scope to avoid re-creation on re-renders.`);
+    lines.push(`const _worker = typeof window !== 'undefined'`);
+    lines.push(`  ? new Worker(new URL('./${sceneName}.worker.tsx', import.meta.url), { type: 'module' })`);
+    lines.push(`  : null;`);
+    lines.push(``);
+  }
   lines.push(`export const ${toCamelCase(sceneName)}: React.FC = () => {`);
   lines.push(`  const frame = useCurrentFrame();`);
   lines.push(`  const { fps, durationInFrames } = useVideoConfig();`);
@@ -162,16 +214,41 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): string {
     lines.push(`      }} />`);
   }
 
-  // Emit R3F Canvas with camera primitives when present
+  // Emit R3F Canvas with camera primitives when present.
+  // Uses @react-three/offscreen Canvas so WebGL rendering runs on a Worker
+  // thread, keeping the main thread free for Remotion's video pipeline.
   if (hasCameras) {
     lines.push(`      <AbsoluteFill>`);
-    lines.push(`        <Canvas>`);
+    lines.push(`        {/* Worker is created once — module-scope so it survives re-renders */}`);
+    lines.push(`        <Canvas`);
+    lines.push(`          worker={_worker ?? undefined}`);
+    lines.push(`          fallback={(`);
+    lines.push(`            <>`);
     for (const cam of cameraPrims) {
-      lines.push(...emitCameraJSX(cam));
+      for (const l of emitCameraJSX(cam)) lines.push(`              ${l.trim()}`);
     }
-    lines.push(`          <OrbitControls />`);
-    lines.push(`        </Canvas>`);
+    lines.push(`              <OrbitControls />`);
+    lines.push(`            </>`);
+    lines.push(`          )}`);
+    lines.push(`        />`);
     lines.push(`      </AbsoluteFill>`);
+  }
+
+  if (hasDetection) {
+    const detectors = detectionNodes.flatMap(d => d.targets);
+    const uniqueDetectors = [...new Set(detectors)];
+    const selectorExpr = selectNode?.selector ?? 'all';
+    lines.push(`      <ObjectDetection`);
+    lines.push(`        videoSrc={clip?.path ?? ''}`);
+    lines.push(`        detectors={[${uniqueDetectors.map(d => `'${d}'`).join(', ')}]}`);
+    lines.push(`        selector="${selectorExpr}"`);
+    lines.push(`      >`);
+    lines.push(`        {(instances) => (`);
+    lines.push(`          <>`);
+    lines.push(`            <SkeletonOverlay instances={instances} style="neon" color="#00ffff" thickness={2} />`);
+    lines.push(`          </>`);
+    lines.push(`        )}`);
+    lines.push(`      </ObjectDetection>`);
   }
 
   lines.push(`    </AbsoluteFill>`);
@@ -187,7 +264,36 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): string {
   lines.push(`  id: '${sceneName}',`);
   lines.push(`};`);
 
-  return lines.join('\n');
+  // Generate a companion worker file when cameras are present.
+  // The worker imports the scene components and calls render() from
+  // @react-three/offscreen so that R3F runs on a dedicated thread.
+  let workerCode: string | null = null;
+  if (hasCameras) {
+    const wlines: string[] = [];
+    wlines.push(`// MEE — Generated offscreen worker for scene: ${sceneName}`);
+    wlines.push(`// Companion to ${sceneName}.tsx — runs R3F on a Worker thread.`);
+    wlines.push(`import React from 'react';`);
+    wlines.push(`import { render } from '@react-three/offscreen';`);
+    wlines.push(`import { OrbitControls } from '@react-three/drei';`);
+    const cameraImports = [...new Set(cameraPrims.map(p => emitCameraImport(p)))].filter(Boolean);
+    for (const imp of cameraImports) wlines.push(imp);
+    wlines.push(``);
+    wlines.push(`function Scene() {`);
+    wlines.push(`  return (`);
+    wlines.push(`    <>`);
+    for (const cam of cameraPrims) {
+      for (const l of emitCameraJSX(cam)) wlines.push(`      ${l.trim()}`);
+    }
+    wlines.push(`      <OrbitControls />`);
+    wlines.push(`    </>`);
+    wlines.push(`  );`);
+    wlines.push(`}`);
+    wlines.push(``);
+    wlines.push(`render(<Scene />);`);
+    workerCode = wlines.join('\n');
+  }
+
+  return { composition: lines.join('\n'), worker: workerCode };
 }
 
 function emitPrimitive(prim: IRPrim, fps: number): string[] {
@@ -309,6 +415,23 @@ function collectPrims(ir: IRNode): IRPrim[] {
   if (ir.kind === 'IRPrim') return [ir];
   if (ir.kind === 'IRCompose') return ir.steps.flatMap(collectPrims);
   return [];
+}
+
+function collectDetect(ir: IRNode): IRDetect[] {
+  if (ir.kind === 'IRDetect') return [ir];
+  if (ir.kind === 'IRCompose') return ir.steps.flatMap(collectDetect);
+  return [];
+}
+
+function collectSelect(ir: IRNode): IRSelect | null {
+  if (ir.kind === 'IRSelect') return ir;
+  if (ir.kind === 'IRCompose') {
+    for (const step of ir.steps) {
+      const found = collectSelect(step);
+      if (found) return found;
+    }
+  }
+  return null;
 }
 
 function getPrimitiveHint(name: string): string {

@@ -10,6 +10,7 @@ import {
   SceneNode, PipelineNode, PipelineStep,
   ClipNode, ActsLikeNode, ComposeNode, PrimArgNode,
   RenderNode, GoalNode, BrandNode, DispatchNode, WhenClauseNode,
+  DetectNode, SelectNode, ApplyToSelectionNode, ForEachNode,
   Diagnostic,
 } from './types';
 
@@ -112,6 +113,14 @@ export function parse(tokens: Token[]): ParseResult {
         steps.push(parseCompose());
       } else if (t.kind === 'KEYWORD' && t.value === 'render') {
         steps.push(parseRender());
+      } else if (t.kind === 'KEYWORD' && t.value === 'detect') {
+        steps.push(parseDetect());
+      } else if (t.kind === 'KEYWORD' && t.value === 'select') {
+        steps.push(parseSelect());
+      } else if (t.kind === 'KEYWORD' && t.value === 'apply_to_selection') {
+        steps.push(parseApplyToSelection());
+      } else if (t.kind === 'KEYWORD' && t.value === 'for_each') {
+        steps.push(parseForEach());
       } else if (t.kind === 'KEYWORD' && t.value === 'brand') {
         // brand used inline as a catalyst — treat as compose step
         advance(); // eat 'brand'
@@ -331,6 +340,92 @@ export function parse(tokens: Token[]): ParseResult {
     eat('RBRACE');
 
     return { kind: 'Dispatch', clauses };
+  }
+
+  function parseDetect(): DetectNode {
+    expect('KEYWORD', 'detect');
+    expect('LPAREN');
+    const targets: string[] = [];
+    let minConfidence = 0.5;
+
+    while (peek().kind !== 'RPAREN' && peek().kind !== 'EOF') {
+      const k = peek();
+      if (k.value === 'minConfidence') {
+        advance();
+        eat('EQUALS');
+        const v = peek();
+        if (v.kind === 'NUMBER') { minConfidence = parseFloat(v.value); advance(); }
+      } else if (k.kind === 'STRING' || k.kind === 'IDENT' || k.kind === 'KEYWORD') {
+        targets.push(k.value);
+        advance();
+      } else {
+        advance();
+      }
+      eat('COMMA');
+    }
+    eat('RPAREN');
+
+    return { kind: 'Detect', targets, minConfidence };
+  }
+
+  function parseSelect(): SelectNode {
+    expect('KEYWORD', 'select');
+    expect('LPAREN');
+    const selectorToken = peek();
+    let selector = 'all';
+    if (selectorToken.kind === 'STRING' || selectorToken.kind === 'IDENT') {
+      selector = selectorToken.value;
+      advance();
+    }
+    eat('RPAREN');
+    return { kind: 'Select', selector };
+  }
+
+  function parseApplyToSelection(): ApplyToSelectionNode {
+    expect('KEYWORD', 'apply_to_selection');
+    expect('LPAREN');
+    const effects: import('./types').PrimArgNode[] = [];
+
+    while (peek().kind !== 'RPAREN' && peek().kind !== 'EOF') {
+      const prim = parsePrimArg();
+      if (prim) effects.push(prim);
+      eat('COMMA');
+    }
+    eat('RPAREN');
+
+    return { kind: 'ApplyToSelection', effects };
+  }
+
+  function parseForEach(): ForEachNode {
+    expect('KEYWORD', 'for_each');
+    expect('LPAREN');
+    const targetToken = peek();
+    let target = 'person';
+    if (targetToken.kind === 'STRING' || targetToken.kind === 'IDENT') {
+      target = targetToken.value;
+      advance();
+    }
+    eat('RPAREN');
+    expect('LBRACE');
+
+    const body: PipelineStep[] = [];
+    while (peek().kind !== 'RBRACE' && peek().kind !== 'EOF') {
+      if (eat('PIPE')) {
+        const t = peek();
+        if (t.kind === 'KEYWORD' && t.value === 'compose') {
+          body.push(parseCompose());
+        } else if (t.kind === 'KEYWORD' && t.value === 'apply_to_selection') {
+          body.push(parseApplyToSelection());
+        } else {
+          advance();
+        }
+      } else {
+        advance();
+      }
+    }
+    eat('RBRACE');
+
+    return { kind: 'ForEach', target, body };
   }
 
   // ---- entry -----------------------------------------------------------

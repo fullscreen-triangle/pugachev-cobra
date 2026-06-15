@@ -31,6 +31,7 @@ export const KEYWORDS = new Set([
   'at', 'for', 'fps', 'aspect', 'duration',
   'behaviour', 'coherence', 'confidence', 'invariant',
   'via', 'emit',
+  'detect', 'select', 'apply_to_selection', 'for_each',
 ]);
 
 export interface Token {
@@ -73,7 +74,11 @@ export type PipelineStep =
   | ClipNode
   | ActsLikeNode
   | ComposeNode
-  | RenderNode;
+  | RenderNode
+  | DetectNode
+  | SelectNode
+  | ApplyToSelectionNode
+  | ForEachNode;
 
 export interface ClipNode {
   kind: 'Clip';
@@ -134,7 +139,10 @@ export type IRNode =
   | IRClip
   | IRPrim
   | IRCompose
-  | IRHole;
+  | IRHole
+  | IRDetect
+  | IRSelect
+  | IRObjectEffect;
 
 export interface IRClip {
   kind: 'IRClip';
@@ -177,6 +185,50 @@ export interface CompileResult {
   ok: boolean;
   scene: SceneNode | null;
   ir: IRNode | null;
-  remotion: string | null;   // emitted Remotion TSX source
+  remotion: string | null;       // emitted Remotion TSX source
+  remotionWorker: string | null; // companion offscreen worker TSX (non-null when cameras present)
   diagnostics: Diagnostic[];
+}
+
+// ---- Detection AST nodes ---------------------------------------------
+
+export interface DetectNode {
+  kind: 'Detect';
+  targets: string[];   // e.g. ['person', 'face']
+  minConfidence: number;
+}
+
+export interface SelectNode {
+  kind: 'Select';
+  selector: string;   // selector expression e.g. 'person[0].pose==running'
+}
+
+export interface ApplyToSelectionNode {
+  kind: 'ApplyToSelection';
+  effects: PrimArgNode[];
+}
+
+export interface ForEachNode {
+  kind: 'ForEach';
+  target: string;     // object type to iterate over
+  body: PipelineStep[];
+}
+
+// ---- Detection IR nodes ----------------------------------------------
+
+export interface IRDetect {
+  kind: 'IRDetect';
+  targets: string[];
+  minConfidence: number;
+}
+
+export interface IRSelect {
+  kind: 'IRSelect';
+  selector: string;
+}
+
+export interface IRObjectEffect {
+  kind: 'IRObjectEffect';
+  effect: string;
+  params: Record<string, string | number>;
 }

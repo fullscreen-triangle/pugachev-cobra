@@ -26,6 +26,17 @@ export function check(scene: SceneNode): CheckResult {
   // ---- (a) Resolve acts_like descriptions ----------------------------
 
   for (const step of scene.pipeline.steps) {
+    // Detection nodes carry no primitives into the registry — they are purely
+    // structural and resolved at emit time by the detection pipeline
+    if (
+      step.kind === 'Detect' ||
+      step.kind === 'Select' ||
+      step.kind === 'ApplyToSelection' ||
+      step.kind === 'ForEach'
+    ) {
+      continue;
+    }
+
     if (step.kind === 'ActsLike') {
       const spec = resolveDescription(step.description);
       if (!spec) {

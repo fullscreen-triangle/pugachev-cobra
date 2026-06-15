@@ -8,7 +8,7 @@
 import { tokenize } from './tokenizer';
 import { parse } from './parser';
 import { check, compositePower } from './checker';
-import { buildIR, emitRemotion } from './emitter';
+import { buildIR, emitRemotion, EmitResult } from './emitter';
 import { CompileResult, Diagnostic } from './types';
 import { BEHAVIOURS, findSupportCycle } from './registry';
 
@@ -24,7 +24,7 @@ export function compile(source: string): CompileResult {
     tokens = tokenize(source);
   } catch (e: any) {
     return {
-      ok: false, scene: null, ir: null, remotion: null,
+      ok: false, scene: null, ir: null, remotion: null, remotionWorker: null,
       diagnostics: [{ level: 'error', code: 'LexError', message: String(e.message) }],
     };
   }
@@ -34,7 +34,7 @@ export function compile(source: string): CompileResult {
   allDiagnostics.push(...parseDiags);
 
   if (!scene) {
-    return { ok: false, scene: null, ir: null, remotion: null, diagnostics: allDiagnostics };
+    return { ok: false, scene: null, ir: null, remotion: null, remotionWorker: null, diagnostics: allDiagnostics };
   }
 
   // Stage 3 — type-check + resolve
@@ -46,9 +46,12 @@ export function compile(source: string): CompileResult {
 
   // Stage 5 — emit Remotion (only if no errors)
   let remotion: string | null = null;
+  let remotionWorker: string | null = null;
   if (ok) {
     try {
-      remotion = emitRemotion(ir, scene.name);
+      const result: EmitResult = emitRemotion(ir, scene.name);
+      remotion = result.composition;
+      remotionWorker = result.worker;
     } catch (e: any) {
       allDiagnostics.push({ level: 'error', code: 'EmitError', message: String(e.message) });
     }
@@ -59,6 +62,7 @@ export function compile(source: string): CompileResult {
     scene,
     ir,
     remotion,
+    remotionWorker,
     diagnostics: allDiagnostics,
   };
 }
