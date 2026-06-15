@@ -9,7 +9,7 @@ import {
   SceneNode, PipelineStep,
   IRNode, IRClip, IRPrim, IRCompose, IRHole,
 } from './types';
-import { PrimitiveSpec, resolvePrimitive } from './registry';
+import { PrimitiveSpec, resolvePrimitive, deriveChain } from './registry';
 
 // ---- IR builder ------------------------------------------------------
 
@@ -21,19 +21,31 @@ export function buildIR(scene: SceneNode, resolvedPrimitives: PrimitiveSpec[]): 
     if (node) steps.push(node);
   }
 
-  // If the acts_like primitives haven't been inlined yet, append them now
-  // (they come from the checker's resolution and are not directly in the AST).
+  // For acts_like steps: inject the derived chain in backward-completion
+  // order (§8 Principle backward). deriveChain() returns the primitives
+  // ordered so that each primitive is introduced after the primitives that
+  // most support it have already appeared — building spatial context first,
+  // then layering photometric and temporal effects.
   const hasActsLike = scene.pipeline.steps.some(s => s.kind === 'ActsLike');
   if (hasActsLike) {
-    const primNodes: IRPrim[] = resolvedPrimitives
-      .filter(p => !steps.some(s => s.kind === 'IRPrim' && (s as IRPrim).primitive === p.name))
-      .map(p => ({
-        kind: 'IRPrim' as const,
-        primitive: p.name,
-        namespace: p.namespace,
-        params: { ...p.defaultParams },
-        power: p.power,
-      }));
+    // Exclude any primitives already explicitly placed by compose() steps
+    const explicitNames = new Set(
+      steps
+        .filter(s => s.kind === 'IRCompose')
+        .flatMap(s => (s as IRCompose).steps)
+        .filter(s => s.kind === 'IRPrim')
+        .map(s => (s as IRPrim).primitive)
+    );
+    const unplaced = resolvedPrimitives.filter(p => !explicitNames.has(p.name));
+    // Apply backward chain derivation to determine execution order
+    const ordered = deriveChain(unplaced);
+    const primNodes: IRPrim[] = ordered.map(p => ({
+      kind: 'IRPrim' as const,
+      primitive: p.name,
+      namespace: p.namespace,
+      params: { ...p.defaultParams },
+      power: p.power,
+    }));
     if (primNodes.length > 0) steps.push({ kind: 'IRCompose', steps: primNodes });
   }
 

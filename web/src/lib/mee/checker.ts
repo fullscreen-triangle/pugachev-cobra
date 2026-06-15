@@ -11,7 +11,7 @@
 // ======================================================================
 
 import { SceneNode, PipelineStep, Diagnostic, Namespace } from './types';
-import { resolveDescription, resolvePrimitive, PrimitiveSpec } from './registry';
+import { resolveDescription, resolvePrimitive, PrimitiveSpec, findSupportCycle } from './registry';
 
 export interface CheckResult {
   ok: boolean;
@@ -55,25 +55,38 @@ export function check(scene: SceneNode): CheckResult {
     }
   }
 
-  // ---- (b) Coherence: support graph must contain a 3-cycle ----------
+  // ---- (b) Coherence: support graph must contain a directed 3-cycle --
   //
-  //  We approximate the support graph structurally:
-  //  - Two primitives in the SAME namespace support each other (same channel = mutual reinforcement).
-  //  - Two primitives in DIFFERENT namespaces support each other when they both contribute
-  //    to the same target behaviour (multi-channel convergence).
-  //  A coherent chain has primitives from >=3 namespaces, each non-empty,
-  //  forming a mutually reinforcing triangle.
+  //  From §6 Theorem (coherence requires a triangle) and Corollary
+  //  (ordinal decidability): coherence is decidable from the signs of
+  //  pairwise support relations alone. We inspect the directed support
+  //  graph restricted to the resolved primitives and look for a directed
+  //  cycle of length ≥ 3. The `findSupportCycle` function (registry.ts)
+  //  implements iterative DFS with three-colour marking. A cycle of
+  //  length ≥ 3 certifies that the chain is self-grounding: each member
+  //  of the cycle is supported by the others, so removing any one still
+  //  leaves the remaining two mutually supporting (§6 Thm ii).
 
-  const namespaces = new Set<Namespace>(resolvedPrimitives.map(p => p.namespace));
-  if (resolvedPrimitives.length > 0 && namespaces.size < 3) {
-    const present = [...namespaces].join(', ');
-    const missing = (['spatial', 'photometric', 'temporal', 'acoustic'] as Namespace[])
-      .filter(n => !namespaces.has(n));
-    diagnostics.push({
-      level: 'warning', code: 'CoherenceWarning',
-      message: `Chain covers ${namespaces.size} namespace(s) (${present}) — ` +
-        `coherence requires at least 3. Consider adding effects from: ${missing.join(', ')}.`,
-    });
+  if (resolvedPrimitives.length > 0) {
+    const cycle = findSupportCycle(resolvedPrimitives);
+    if (!cycle) {
+      // Acyclic support graph or only 1- or 2-cycles: chain is not self-grounding.
+      // Report which primitives have zero in-degree (no support from peers) as
+      // the most actionable diagnostic.
+      const nameSet = new Set(resolvedPrimitives.map(p => p.name));
+      const unsupported = resolvedPrimitives.filter(p => {
+        return !resolvedPrimitives.some(q => q.name !== p.name && q.supports.includes(p.name));
+      });
+      const unsupportedNames = unsupported.map(p => p.name).join(', ');
+      diagnostics.push({
+        level: 'warning', code: 'CoherenceWarning',
+        message: `Support graph contains no directed 3-cycle — chain is not self-grounding (§6). ` +
+          `Primitives with no incoming support: ${unsupportedNames || 'none'}. ` +
+          `Add a primitive that reinforces one of these, or add a behaviour description ` +
+          `whose primitives form a mutually supporting triangle.`,
+      });
+    }
+    // If cycle found, coherence is confirmed; no diagnostic emitted.
   }
 
   // ---- (c) Saturation: composite power should be non-summable -------

@@ -10,7 +10,7 @@ import { parse } from './parser';
 import { check, compositePower } from './checker';
 import { buildIR, emitRemotion } from './emitter';
 import { CompileResult, Diagnostic } from './types';
-import { BEHAVIOURS } from './registry';
+import { BEHAVIOURS, findSupportCycle } from './registry';
 
 export { BEHAVIOURS };
 export type { CompileResult, Diagnostic };
@@ -106,12 +106,15 @@ export function summarise(result: CompileResult): CompileSummary | null {
   const warnings = result.diagnostics.filter(d => d.level === 'warning').length;
   const info = result.diagnostics.filter(d => d.level === 'info').length;
 
+  // Coherence from actual 3-cycle detection (§6), not namespace count
+  const coherent = findSupportCycle(primitives) !== null;
+
   return {
     sceneName: result.scene.name,
     primitiveCount: primitives.length,
     namespaces,
     compositePowerPct: Math.round(power * 1000) / 10,
-    coherent: namespaces.length >= 3,
+    coherent,
     diagnosticCounts: { errors, warnings, info },
   };
 }
