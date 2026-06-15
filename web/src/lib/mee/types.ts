@@ -1,0 +1,182 @@
+// ======================================================================
+//  MEE — Types
+//  Token definitions, AST nodes, IR nodes, and compiler result.
+// ======================================================================
+
+// ---- Tokens -----------------------------------------------------------
+
+export type TokenKind =
+  | 'IDENT'
+  | 'STRING'
+  | 'NUMBER'
+  | 'TIME'          // e.g. 15s, 2.5s
+  | 'PIPE'          // |>
+  | 'LBRACE'        // {
+  | 'RBRACE'        // }
+  | 'LPAREN'        // (
+  | 'RPAREN'        // )
+  | 'COMMA'         // ,
+  | 'COLON'         // :
+  | 'EQUALS'        // =
+  | 'GT'            // >
+  | 'LT'            // <
+  | 'GTE'           // >=
+  | 'LTE'           // <=
+  | 'KEYWORD'
+  | 'EOF';
+
+export const KEYWORDS = new Set([
+  'scene', 'clip', 'acts_like', 'compose', 'render',
+  'goal', 'brand', 'dispatch', 'when', 'do', 'play',
+  'at', 'for', 'fps', 'aspect', 'duration',
+  'behaviour', 'coherence', 'confidence', 'invariant',
+  'via', 'emit',
+]);
+
+export interface Token {
+  kind: TokenKind;
+  value: string;
+  line: number;
+  col: number;
+}
+
+// ---- AST --------------------------------------------------------------
+
+export type ASTNode =
+  | SceneNode
+  | ClipNode
+  | ActsLikeNode
+  | ComposeNode
+  | RenderNode
+  | GoalNode
+  | BrandNode
+  | DispatchNode
+  | WhenClauseNode
+  | PipelineNode
+  | PrimArgNode;
+
+export interface SceneNode {
+  kind: 'Scene';
+  name: string;
+  pipeline: PipelineNode;
+  goal: GoalNode | null;
+  brands: BrandNode[];
+  dispatch: DispatchNode | null;
+}
+
+export interface PipelineNode {
+  kind: 'Pipeline';
+  steps: PipelineStep[];
+}
+
+export type PipelineStep =
+  | ClipNode
+  | ActsLikeNode
+  | ComposeNode
+  | RenderNode;
+
+export interface ClipNode {
+  kind: 'Clip';
+  path: string;
+  at: number;   // seconds
+  for: number;  // seconds
+}
+
+export interface ActsLikeNode {
+  kind: 'ActsLike';
+  description: string;
+}
+
+export interface ComposeNode {
+  kind: 'Compose';
+  effects: PrimArgNode[];
+}
+
+export interface PrimArgNode {
+  kind: 'PrimArg';
+  name: string;                         // primitive name e.g. 'oscillate'
+  params: Record<string, string | number>;
+}
+
+export interface RenderNode {
+  kind: 'Render';
+  format: string;
+}
+
+export interface GoalNode {
+  kind: 'Goal';
+  behaviour: string | null;
+  coherenceThreshold: number;           // default 0.5
+  maxDuration: number | null;           // seconds
+}
+
+export interface BrandNode {
+  kind: 'Brand';
+  name: string;
+  invariant: string;
+  confidence: number;
+}
+
+export interface DispatchNode {
+  kind: 'Dispatch';
+  clauses: WhenClauseNode[];
+}
+
+export interface WhenClauseNode {
+  kind: 'WhenClause';
+  format: string;
+  target: string;
+}
+
+// ---- IR ---------------------------------------------------------------
+
+export type IRNode =
+  | IRClip
+  | IRPrim
+  | IRCompose
+  | IRHole;
+
+export interface IRClip {
+  kind: 'IRClip';
+  path: string;
+  at: number;
+  duration: number;
+}
+
+export interface IRPrim {
+  kind: 'IRPrim';
+  primitive: string;
+  namespace: Namespace;
+  params: Record<string, string | number>;
+  power: number;  // estimated catalytic power [0,1]
+}
+
+export interface IRCompose {
+  kind: 'IRCompose';
+  steps: IRNode[];
+}
+
+export interface IRHole {
+  kind: 'IRHole';
+  description: string;   // unresolved behaviour description — error at emit
+}
+
+export type Namespace = 'spatial' | 'photometric' | 'temporal' | 'acoustic';
+
+// ---- Compiler result --------------------------------------------------
+
+export interface Diagnostic {
+  level: 'error' | 'warning' | 'info';
+  code: string;
+  message: string;
+  line?: number;
+  col?: number;
+}
+
+export interface CompileResult {
+  ok: boolean;
+  scene: SceneNode | null;
+  ir: IRNode | null;
+  remotion: string | null;   // emitted Remotion TSX source
+  diagnostics: Diagnostic[];
+}

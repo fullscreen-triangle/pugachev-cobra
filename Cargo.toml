@@ -1,0 +1,18 @@
+[workspace]
+# Rust workspace for the production MEE compiler.
+# Members are added here as crates are introduced.
+#
+# Planned layout:
+#   compiler/        — mee-compiler crate (tokeniser, parser, checker, IR, emitter)
+#   cli/             — mee binary (reads .mee files, writes Remotion TSX + JSON)
+#
+# members = ["compiler", "cli"]
+
+resolver = "2"
+
+[workspace.package]
+version     = "0.1.0"
+edition     = "2021"
+authors     = ["Pugachev Cobra Project"]
+description = "Media Effect Encoder — production Rust compiler"
+license     = "MIT"
