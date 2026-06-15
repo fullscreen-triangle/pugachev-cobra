@@ -164,8 +164,15 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
 
   const hasCameras = cameraPrims.length > 0;
   const hasDetection = detectionNodes.length > 0;
+  const videoPrims = effectPrims.filter(p => getPrimitiveHint(p.primitive).startsWith('video:'));
+  const hasVideoEffects = videoPrims.length > 0;
 
   lines.push(`import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Video, Audio, Sequence } from 'remotion';`);
+  if (hasVideoEffects) {
+    lines.push(`import { VideoEffectStack } from '@/effects/video/remotion/VideoEffectStack';`);
+    lines.push(`import { getVideoEffect } from '@/effects/video/registry';`);
+    lines.push(`import React from 'react';`);
+  }
   if (hasCameras) {
     lines.push(`import { Canvas } from '@react-three/offscreen';`);
     lines.push(`import { OrbitControls } from '@react-three/drei';`);
@@ -189,6 +196,9 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
   lines.push(`  const frame = useCurrentFrame();`);
   lines.push(`  const { fps, durationInFrames } = useVideoConfig();`);
   lines.push(`  const t = frame / fps; // time in seconds`);
+  if (hasVideoEffects) {
+    lines.push(`  const _videoRef = React.useRef<HTMLVideoElement>(null);`);
+  }
   lines.push(``);
 
   // Emit interpolations for each non-camera primitive
@@ -201,7 +211,24 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
   lines.push(`    <AbsoluteFill style={{ backgroundColor: '#000' }}>`);
 
   if (clip) {
-    lines.push(`      <Video src="${clip.path}" startFrom={${Math.round(clip.at * fps)}} />`);
+    if (hasVideoEffects) {
+      lines.push(`      <Video src="${clip.path}" startFrom={${Math.round(clip.at * fps)}} ref={_videoRef} />`);
+    } else {
+      lines.push(`      <Video src="${clip.path}" startFrom={${Math.round(clip.at * fps)}} />`);
+    }
+  }
+  if (hasVideoEffects) {
+    lines.push(`      <VideoEffectStack`);
+    lines.push(`        effects={[`);
+    for (const vp of videoPrims) {
+      const effectId = getPrimitiveHint(vp.primitive).replace('video:', '');
+      lines.push(`          { effect: getVideoEffect('${effectId}')!, params: ${JSON.stringify(vp.params)} },`);
+    }
+    lines.push(`        ]}`);
+    lines.push(`        videoRef={_videoRef}`);
+    lines.push(`        width={1920}`);
+    lines.push(`        height={1080}`);
+    lines.push(`      />`);
   }
 
   // Emit visual layer for each spatial/photometric (non-camera) primitive
@@ -337,9 +364,16 @@ function emitPrimitive(prim: IRPrim, fps: number): string[] {
       lines.push(`  const ${varName} = Math.exp(-t * ${decay});`);
       break;
     }
-    default:
-      // No JS-side interpolation needed — handled as CSS filter or layer
+    default: {
+      if (hint.startsWith('video:')) {
+        const effectId = hint.replace('video:', '');
+        const ns = prim.namespace;
+        if (ns === 'temporal') {
+          lines.push(`  const ${varName} = frame / fps;`);
+        }
+      }
       break;
+    }
   }
 
   return lines;
@@ -392,6 +426,9 @@ function emitStyleProp(prim: IRPrim): string[] {
       lines.push(`        /* ${prim.primitive}: add a separate <AbsoluteFill> layer */`);
       break;
     default:
+      if (hint.startsWith('video:')) {
+        // Video effects are composited via VideoEffectStack — no inline style needed
+      }
       break;
   }
 
