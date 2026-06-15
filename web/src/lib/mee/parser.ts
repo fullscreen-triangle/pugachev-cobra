@@ -121,6 +121,8 @@ export function parse(tokens: Token[]): ParseResult {
         steps.push(parseApplyToSelection());
       } else if (t.kind === 'KEYWORD' && t.value === 'for_each') {
         steps.push(parseForEach());
+      } else if (t.kind === 'KEYWORD' && t.value === 'shader') {
+        steps.push(parseShader());
       } else if (t.kind === 'KEYWORD' && t.value === 'brand') {
         // brand used inline as a catalyst — treat as compose step
         advance(); // eat 'brand'
@@ -426,6 +428,54 @@ export function parse(tokens: Token[]): ParseResult {
     eat('RBRACE');
 
     return { kind: 'ForEach', target, body };
+  }
+
+  function parseShader(): import('./types').ShaderNode {
+    expect('KEYWORD', 'shader');
+    expect('LPAREN');
+
+    // Recognised aliases → canonical HF model IDs
+    const MODEL_ALIASES: Record<string, import('./types').HFModel> = {
+      'diffusion-as-shader': 'EXCAI/Diffusion-As-Shader',
+      'diffusion_shader':    'EXCAI/Diffusion-As-Shader',
+      'EXCAI/Diffusion-As-Shader': 'EXCAI/Diffusion-As-Shader',
+      'video-from-3d':       'VideoFrom3D/VideoFrom3D',
+      'video_from_3d':       'VideoFrom3D/VideoFrom3D',
+      'VideoFrom3D/VideoFrom3D': 'VideoFrom3D/VideoFrom3D',
+    };
+
+    let model: import('./types').HFModel = 'EXCAI/Diffusion-As-Shader';
+    const params: Record<string, string | number> = {};
+
+    while (peek().kind !== 'RPAREN' && peek().kind !== 'EOF') {
+      const key = peek();
+      if (key.kind === 'STRING' || key.kind === 'IDENT' || key.kind === 'KEYWORD') {
+        const k = key.value; advance();
+        if (eat('EQUALS')) {
+          const v = peek();
+          const val = v.kind === 'STRING' ? v.value
+                    : v.kind === 'NUMBER' ? parseFloat(v.value)
+                    : v.value;
+          advance();
+          if (k === 'model') {
+            const resolved = MODEL_ALIASES[String(val)];
+            if (resolved) model = resolved;
+          } else {
+            params[k] = val;
+          }
+        } else {
+          // bare identifier — treat as model shorthand
+          const resolved = MODEL_ALIASES[k];
+          if (resolved) model = resolved;
+        }
+      } else {
+        advance();
+      }
+      eat('COMMA');
+    }
+    eat('RPAREN');
+
+    return { kind: 'Shader', model, params };
   }
 
   // ---- entry -----------------------------------------------------------

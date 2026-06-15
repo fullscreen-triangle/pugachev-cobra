@@ -8,7 +8,7 @@
 import {
   SceneNode, PipelineStep,
   IRNode, IRClip, IRPrim, IRCompose, IRHole,
-  IRDetect, IRSelect, IRObjectEffect,
+  IRDetect, IRSelect, IRObjectEffect, IRShader,
 } from './types';
 import { PrimitiveSpec, resolvePrimitive, deriveChain } from './registry';
 
@@ -132,6 +132,15 @@ function buildStep(step: PipelineStep, _resolved: PrimitiveSpec[]): IRNode | nul
       return { kind: 'IRCompose', steps: bodyNodes };
     }
 
+    case 'Shader':
+      // sourceClip is resolved in emitRemotion once the clip is known
+      return {
+        kind: 'IRShader',
+        model: step.model,
+        params: step.params,
+        sourceClip: '',
+      } satisfies IRShader;
+
     default:
       return null;
   }
@@ -150,6 +159,7 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
   const allPrims = collectPrims(ir);
   const detectionNodes = collectDetect(ir);
   const selectNode = collectSelect(ir);
+  const shaderNodes = collectShaders(ir);
 
   const lines: string[] = [];
 
@@ -166,6 +176,7 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
   const hasDetection = detectionNodes.length > 0;
   const videoPrims = effectPrims.filter(p => getPrimitiveHint(p.primitive).startsWith('video:'));
   const hasVideoEffects = videoPrims.length > 0;
+  const hasShaders = shaderNodes.length > 0;
 
   lines.push(`import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Video, Audio, Sequence } from 'remotion';`);
   if (hasVideoEffects) {
@@ -183,6 +194,9 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
   if (hasDetection) {
     lines.push(`import { ObjectDetection } from '@/lib/detection/remotion/ObjectDetection';`);
     lines.push(`import { SkeletonOverlay } from '@/lib/detection/remotion/SkeletonOverlay';`);
+  }
+  if (hasShaders) {
+    lines.push(`import { HFPrimitiveLayer } from '@/lib/hf/remotion/HFPrimitiveLayer';`);
   }
   lines.push(``);
   if (hasCameras) {
@@ -229,6 +243,21 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
     lines.push(`        width={1920}`);
     lines.push(`        height={1080}`);
     lines.push(`      />`);
+  }
+
+  // Emit HF shader layers — each IRShader becomes an HFPrimitiveLayer that
+  // calls the HF Inference API and swaps the video src when the result arrives.
+  if (hasShaders) {
+    const clipPath = clip?.path ?? '';
+    const startFrom = clip ? Math.round(clip.at * fps) : 0;
+    for (const shader of shaderNodes) {
+      const paramsJson = JSON.stringify({ model: shader.model, ...shader.params });
+      lines.push(`      <HFPrimitiveLayer`);
+      lines.push(`        sourceClip="${clipPath}"`);
+      lines.push(`        params={${paramsJson}}`);
+      lines.push(`        startFrom={${startFrom}}`);
+      lines.push(`      />`);
+    }
   }
 
   // Emit visual layer for each spatial/photometric (non-camera) primitive
@@ -451,6 +480,12 @@ function findClip(ir: IRNode): { path: string; at: number; duration: number } | 
 function collectPrims(ir: IRNode): IRPrim[] {
   if (ir.kind === 'IRPrim') return [ir];
   if (ir.kind === 'IRCompose') return ir.steps.flatMap(collectPrims);
+  return [];
+}
+
+function collectShaders(ir: IRNode): IRShader[] {
+  if (ir.kind === 'IRShader') return [ir];
+  if (ir.kind === 'IRCompose') return ir.steps.flatMap(collectShaders);
   return [];
 }
 

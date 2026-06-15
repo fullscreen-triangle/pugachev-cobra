@@ -32,8 +32,19 @@ export function check(scene: SceneNode): CheckResult {
       step.kind === 'Detect' ||
       step.kind === 'Select' ||
       step.kind === 'ApplyToSelection' ||
-      step.kind === 'ForEach'
+      step.kind === 'ForEach' ||
+      step.kind === 'Shader'
     ) {
+      // Shader primitives are resolved at runtime via HF API; the checker
+      // accepts them unconditionally and patches in their power contribution
+      // via the HF_PRIMITIVES registry (loaded as a side-effect).
+      if (step.kind === 'Shader') {
+        const shaderPrimName = step.model === 'EXCAI/Diffusion-As-Shader'
+          ? 'diffusion_shader' : 'video_from_3d';
+        const { resolvePrimitive: rp } = require('./registry');
+        const spec = rp(shaderPrimName);
+        if (spec) resolvedPrimitives.push(spec);
+      }
       continue;
     }
 

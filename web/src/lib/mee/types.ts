@@ -32,6 +32,7 @@ export const KEYWORDS = new Set([
   'behaviour', 'coherence', 'confidence', 'invariant',
   'via', 'emit',
   'detect', 'select', 'apply_to_selection', 'for_each',
+  'shader',
 ]);
 
 export interface Token {
@@ -78,7 +79,8 @@ export type PipelineStep =
   | DetectNode
   | SelectNode
   | ApplyToSelectionNode
-  | ForEachNode;
+  | ForEachNode
+  | ShaderNode;
 
 export interface ClipNode {
   kind: 'Clip';
@@ -142,7 +144,8 @@ export type IRNode =
   | IRHole
   | IRDetect
   | IRSelect
-  | IRObjectEffect;
+  | IRObjectEffect
+  | IRShader;
 
 export interface IRClip {
   kind: 'IRClip';
@@ -231,4 +234,21 @@ export interface IRObjectEffect {
   kind: 'IRObjectEffect';
   effect: string;
   params: Record<string, string | number>;
+}
+
+// ---- HuggingFace shader / 3D pipeline steps --------------------------
+
+export type HFModel = 'EXCAI/Diffusion-As-Shader' | 'VideoFrom3D/VideoFrom3D';
+
+export interface ShaderNode {
+  kind: 'Shader';
+  model: HFModel;
+  params: Record<string, string | number>;
+}
+
+export interface IRShader {
+  kind: 'IRShader';
+  model: HFModel;
+  params: Record<string, string | number>;
+  sourceClip: string;  // filled in by buildIR from nearest IRClip
 }
