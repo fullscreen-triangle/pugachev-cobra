@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zero Decoder-Shift</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <div class="logo">ZDS</div>
+    <div class="title-block">
+      <span class="name">Zero Decoder-Shift</span>
+      <span class="tagline">Propagation equilibrium — r &gt; r*</span>
+    </div>
+    <label class="toggle-wrap" title="Enable / disable">
+      <input type="checkbox" id="toggle-enabled" />
+      <span class="slider"></span>
+    </label>
+  </header>
+
+  <section class="metrics">
+    <div class="metric">
+      <span class="metric-value" id="ads-processed">0</span>
+      <span class="metric-label">ads processed</span>
+    </div>
+    <div class="metric">
+      <span class="metric-value" id="time-saved">0s</span>
+      <span class="metric-label">time compressed</span>
+    </div>
+    <div class="metric">
+      <span class="metric-value" id="r-star">—</span>
+      <span class="metric-label">r* (30s ad)</span>
+    </div>
+  </section>
+
+  <section class="controls">
+    <div class="control-row">
+      <label for="rate-input">Compression rate <em>r</em></label>
+      <div class="input-group">
+        <input type="range" id="rate-slider" min="1" max="16" step="1" value="16" />
+        <input type="number" id="rate-input" min="1" max="16" step="1" value="16" />
+      </div>
+    </div>
+    <div class="control-row">
+      <label for="omega-input">Integration window ω (ms)</label>
+      <div class="input-group">
+        <input type="range" id="omega-slider" min="5" max="80" step="1" value="13" />
+        <input type="number" id="omega-input" min="5" max="80" step="1" value="13" />
+      </div>
+    </div>
+  </section>
+
+  <section class="theorem-box">
+    <div class="theorem-row">
+      <span class="sym">r*</span>
+      <span class="eq">= τ / ω</span>
+      <span class="val" id="rstar-display">2308</span>
+    </div>
+    <div class="theorem-row">
+      <span class="sym">τ/r</span>
+      <span class="eq">=</span>
+      <span class="val" id="compressed-display">4 ms</span>
+    </div>
+    <div class="status-line" id="status-line">
+      r &gt; r* → zero decoder-shift guaranteed
+    </div>
+  </section>
+
+  <footer>
+    <span>Sachikonye · TU Munich · 2026</span>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+/**
+ * popup.js — Zero Decoder-Shift extension popup
+ *
+ * Reads and writes state via background.js.
+ * Displays theorem values computed from r* = τ/ω.
+ */
+
+"use strict";
+
+const TAU_EXAMPLE = 30; // seconds — used for r* display
+
+// ── DOM refs ─────────────────────────────────────────────────────────────────
+
+const toggleEnabled = document.getElementById("toggle-enabled");
+const rateSlider = document.getElementById("rate-slider");
+const rateInput = document.getElementById("rate-input");
+const omegaSlider = document.getElementById("omega-slider");
+const omegaInput = document.getElementById("omega-input");
+const adsProcessedEl = document.getElementById("ads-processed");
+const timeSavedEl = document.getElementById("time-saved");
+const rStarEl = document.getElementById("r-star");
+const rstarDisplayEl = document.getElementById("rstar-display");
+const compressedEl = document.getElementById("compressed-display");
+const statusLineEl = document.getElementById("status-line");
+
+// ── State ─────────────────────────────────────────────────────────────────────
+
+let state = null;
+
+async function loadState() {
+  state = await chrome.runtime.sendMessage({ type: "GET_STATE" });
+  render();
+}
+
+async function saveState() {
+  await chrome.runtime.sendMessage({ type: "SET_STATE", payload: state });
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+
+function fmtTime(ms) {
+  if (ms < 1000) return `${Math.round(ms)}ms`;
+  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+  return `${Math.floor(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s`;
+}
+
+function computeTheoremValues(rate, omega_ms) {
+  const omega_s = omega_ms / 1000;
+  const r_star = TAU_EXAMPLE / omega_s;
+  const compressed_ms = (TAU_EXAMPLE / rate) * 1000;
+  const aboveThreshold = rate > r_star;
+  return { r_star, compressed_ms, aboveThreshold };
+}
+
+function render() {
+  if (!state) return;
+
+  toggleEnabled.checked = state.enabled;
+
+  rateSlider.value = state.rate;
+  rateInput.value = state.rate;
+  omegaSlider.value = state.omega_ms;
+  omegaInput.value = state.omega_ms;
+
+  // Metrics
+  adsProcessedEl.textContent = state.stats.adsProcessed.toLocaleString();
+  timeSavedEl.textContent = fmtTime(state.stats.totalTimeSavedMs);
+
+  // Theorem display
+  const { r_star, compressed_ms, aboveThreshold } = computeTheoremValues(
+    state.rate,
+    state.omega_ms
+  );
+
+  rStarEl.textContent = Math.round(r_star).toLocaleString();
+  rstarDisplayEl.textContent = Math.round(r_star).toLocaleString();
+  compressedEl.textContent =
+    compressed_ms < 1
+      ? `${compressed_ms.toFixed(2)} ms`
+      : `${compressed_ms.toFixed(1)} ms`;
+
+  if (!state.enabled) {
+    statusLineEl.textContent = "extension disabled";
+    statusLineEl.className = "status-line warning";
+  } else if (aboveThreshold) {
+    statusLineEl.textContent = "r > r* → zero decoder-shift guaranteed";
+    statusLineEl.className = "status-line";
+  } else {
+    statusLineEl.textContent = `r ≤ r* — increase rate above ${Math.ceil(
+      r_star
+    )}`;
+    statusLineEl.className = "status-line warning";
+  }
+}
+
+// ── Event handlers ────────────────────────────────────────────────────────────
+
+toggleEnabled.addEventListener("change", async () => {
+  state.enabled = toggleEnabled.checked;
+  await saveState();
+  render();
+});
+
+function syncRate(value) {
+  const v = Math.max(1, Math.min(16, parseInt(value, 10) || 1));
+  state.rate = v;
+  rateSlider.value = v;
+  rateInput.value = v;
+  render();
+}
+
+rateSlider.addEventListener("input", (e) => syncRate(e.target.value));
+rateInput.addEventListener("change", (e) => {
+  syncRate(e.target.value);
+  saveState();
+});
+rateSlider.addEventListener("change", saveState);
+
+function syncOmega(value) {
+  const v = Math.max(5, Math.min(80, parseInt(value, 10) || 13));
+  state.omega_ms = v;
+  omegaSlider.value = v;
+  omegaInput.value = v;
+  render();
+}
+
+omegaSlider.addEventListener("input", (e) => syncOmega(e.target.value));
+omegaInput.addEventListener("change", (e) => {
+  syncOmega(e.target.value);
+  saveState();
+});
+omegaSlider.addEventListener("change", saveState);
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+
+loadState();

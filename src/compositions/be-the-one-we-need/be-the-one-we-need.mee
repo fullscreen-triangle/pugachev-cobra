@@ -1,0 +1,145 @@
+// ============================================================
+// MEE Scene — "Be the One We Need"
+// Product: Semantic Uncertainty Propagation / four-column translator
+// Duration: 28s  |  fps: 30  |  1920x1080
+//
+// Structural logic (from semantic-uncertainty-propagation.tex):
+//   Identity = invariant minimum cut, never a point.
+//   Meaning = what a unit propagates, not what it labels.
+//   Understanding is bounded by the receiver's own graph.
+//   "Others can only understand what you understand" = thm:receiver
+//   Translation = bidirectional relaxation to quiescence.
+//
+// Ten clip slots — drop into assets/be-the-one-we-need/:
+//   mirror.mp4 / mirror.gif     — person looking in a mirror, face obscured
+//   shadow.mp4 / shadow.gif     — person's shadow on pavement, no body in frame
+//   crowd.mp4  / crowd.gif      — crowd from above, individual indistinct
+//   hands.mp4  / hands.gif      — two hands reaching but not touching
+//   static.mp4 / static.gif     — analogue TV static / interference
+//   archive.mp4 / archive.gif   — old letters, documents, faded photographs
+//   lip.mp4    / lip.gif        — extreme close-up of mouth speaking (silent)
+//   ocean.mp4  / ocean.gif      — ocean surface from above, depth invisible
+//   babel.mp4  / babel.gif      — timelapse of a city, many languages visible
+//   light.mp4  / light.gif      — single light through a keyhole or narrow gap
+//
+// Narrative arc:
+//   0s–3s    mirror    "are you what you are?"
+//   3s–6s    shadow    "are you represented by what you are?"
+//   6s–9s    crowd     "are you what you understand you are?"
+//   9s–12s   hands     [pause — no text, the gap]
+//   12s–15s  static    "others can only understand"
+//   15s–18s  archive   "what you understand"
+//   18s–20s  lip       [silence — mouth moving, no subtitles]
+//   20s–22s  ocean     [silence — the depth]
+//   22s–25s  babel     "no soul should be misunderstood"
+//   25s–28s  light     "be the one we need"
+// ============================================================
+
+scene be-the-one-we-need {
+
+  // ---- ACT I: THE THREE QUESTIONS (0–9s) ----
+  // Each question is its own clip. All in B&W.
+  // The questions are not rhetorical — they have no answer.
+  // That is the point.
+
+  clip "assets/be-the-one-we-need/mirror.mp4" at 0s for 3s
+  at 0s-3s : bw()
+  at 0.3s-2.7s : text(
+    text: "are you what you are ?",
+    color: "#ffffff",
+    size: 56,
+    style: "fade"
+  )
+
+  clip "assets/be-the-one-we-need/shadow.mp4" at 3s for 3s
+  at 3s-6s : bw()
+  at 3.3s-5.7s : text(
+    text: "are you represented by what you are ?",
+    color: "#ffffff",
+    size: 48,
+    style: "fade"
+  )
+
+  clip "assets/be-the-one-we-need/crowd.mp4" at 6s for 3s
+  at 6s-9s : bw()
+  at 6.3s-8.7s : text(
+    text: "are you what you understand you are ?",
+    color: "#ffffff",
+    size: 48,
+    style: "fade"
+  )
+
+  // ---- ACT II: THE GAP (9–12s) ----
+  // Hands reaching but not touching — no text.
+  // The gap between the receiver graphs.
+  // Silence here is structural: the theorem says no point-meaning exists.
+
+  clip "assets/be-the-one-we-need/hands.mp4" at 9s for 3s
+  at 9s-12s : bw()
+
+  // ---- ACT III: THE THEOREM (12–20s) ----
+  // "Others can only understand what you understand"
+  // Split across two clips to force the weight of each half.
+
+  clip "assets/be-the-one-we-need/static.mp4" at 12s for 3s
+  at 12s-15s : bw()
+  at 12.2s-14.8s : text(
+    text: "others can only understand",
+    color: "#ffffff",
+    size: 60,
+    style: "fade"
+  )
+
+  clip "assets/be-the-one-we-need/archive.mp4" at 15s for 3s
+  at 15s-18s : bw()
+  at 15.2s-17.8s : text(
+    text: "what you understand",
+    color: "#ffffff",
+    size: 60,
+    style: "fade"
+  )
+
+  // ---- ACT IV: THE UNBRIDGEABLE (18–22s) ----
+  // Mouth moving — no text. Then ocean depth.
+  // The speaker speaks; the signal transmits; the meaning does not.
+  // Color begins returning here — barely, desaturated.
+
+  clip "assets/be-the-one-we-need/lip.mp4" at 18s for 2s
+
+  clip "assets/be-the-one-we-need/ocean.mp4" at 20s for 2s
+
+  // ---- ACT V: RESOLUTION (22–28s) ----
+  // Babel (the diagnosis) then light (the product).
+  // Full colour returns at light.mp4 — the keyhole moment.
+
+  clip "assets/be-the-one-we-need/babel.mp4" at 22s for 3s
+  at 22s-25s : bw()
+  at 22.2s-24.8s : text(
+    text: "no soul should be misunderstood",
+    color: "#ffffff",
+    size: 52,
+    style: "fade"
+  )
+
+  // Light — colour. This is the only full-colour moment.
+  clip "assets/be-the-one-we-need/light.mp4" at 25s for 3s
+  at 25.5s-27.5s : text(
+    text: "be the one we need",
+    color: "#ffffff",
+    size: 72,
+    style: "fade"
+  )
+
+  goal {
+    behaviour: "route viewer from identity-uncertainty to quiescence-as-care without naming the mechanism"
+    coherence: 0.92
+    duration: 28s
+  }
+
+  brand "semantic-uncertainty-propagation" {
+    invariant: "no sharp cut — meaning is always region-valued, never point-resolved"
+    confidence: 0.97
+  }
+
+  render mp4
+}
