@@ -1,0 +1,99 @@
+// ============================================================
+// MEE Scene — "Leave Before You Arrive"
+// Product: Zero Decoder-Shift / propagation equilibrium tool
+// Duration: 30s  |  fps: 30  |  1920x1080
+//
+// Clip slots (drop source files into assets/leave-before-you-arrive/):
+//   parkour.mp4   — continuous parkour run, routing around obstacles
+//   longjump.mp4  — Beamon / Powell long jump, full arc
+//   cobra.mp4     — Pugachev Cobra manoeuvre, nose-up peak frame
+//
+// Narrative arc:
+//   0s–8s    parkour   "Do you happen to not be interested in a lot?"
+//   8s–17s   longjump  "Is now the only thirst that should be quenched?"
+//             (line 2)  "Is it necessary to make an entrance?"
+//   17s–25s  cobra     "Leave before you arrive."
+//   25s–30s  black     "The only solution is to arrive before you leave."
+// ============================================================
+
+scene leave-before-you-arrive {
+
+  // --- ACT I: PARKOUR (0–8s) ---
+  // Continuous motion, never entering through doors
+  clip "assets/leave-before-you-arrive/parkour.mp4" at 0s for 8s
+
+  at 0s-8s : bw()
+
+  at 1.5s-4.5s : text(
+    text: "do you happen to not be interested in a lot",
+    color: "#ffffff",
+    size: 52,
+    style: "fade"
+  )
+
+  // --- ACT II: LONG JUMP (8–17s) ---
+  clip "assets/leave-before-you-arrive/longjump.mp4" at 8s for 9s
+
+  // black-and-white carries through, broken at jump peak (17s)
+  at 8s-17s : bw()
+
+  at 9.5s-12.5s : text(
+    text: "is now the only thirst that should be quenched",
+    color: "#ffffff",
+    size: 52,
+    style: "fade"
+  )
+
+  at 13.5s-16.5s : text(
+    text: "is it necessary to make an entrance",
+    color: "#ffffff",
+    size: 52,
+    style: "fade"
+  )
+
+  // --- ACT III: COBRA (17–25s) ---
+  // Color returns here — the visual grammar breaks with it
+  clip "assets/leave-before-you-arrive/cobra.mp4" at 17s for 8s
+
+  // glitch on the nose-peak frame (approx 19s–20s) — decoder disruption
+  at 19s-20s : glitch(intensity: 0.6)
+
+  // main line — held on the cobra peak
+  at 20s-24s : text(
+    text: "leave before you arrive",
+    color: "#ffffff",
+    size: 88,
+    style: "fade"
+  )
+
+  // --- ACT IV: BLACK (25–30s) ---
+  // Hold on black — no clip, just the resolution line and product name
+
+  at 25s-29s : text(
+    text: "the only solution is to arrive before you leave",
+    color: "#ffffff",
+    size: 44,
+    style: "fade"
+  )
+
+  // brand line — bottom right, small
+  at 27s-30s : text(
+    text: "zero-decoder-shift",
+    color: "#888888",
+    size: 28,
+    style: "fade"
+  )
+
+  goal {
+    behaviour: "route viewer from interruption-fatigue to propagation-equilibrium without naming either"
+    coherence: 0.9
+    duration: 30s
+  }
+
+  brand "zero-decoder-shift" {
+    invariant: "continuous uninterrupted motion — never show a stop"
+    confidence: 0.95
+  }
+
+  render mp4
+}

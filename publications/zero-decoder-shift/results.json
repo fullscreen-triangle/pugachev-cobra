@@ -1,0 +1,927 @@
+{
+  "experiment_1_floor_theorem": {
+    "theorem": "Floor Theorem: beta > 0 for every bounded receiver",
+    "passed": true,
+    "n_configurations": 6,
+    "all_betas_positive": true,
+    "all_individual_distances_positive": true,
+    "configurations": [
+      {
+        "vocab_size": 4,
+        "percept_size": 400,
+        "beta": 7.825140100065076e-05,
+        "all_distances_positive": true,
+        "min_distance": 7.825140100065076e-05,
+        "mean_distance": 0.08882438268030447
+      },
+      {
+        "vocab_size": 8,
+        "percept_size": 800,
+        "beta": 7.825140100065076e-05,
+        "all_distances_positive": true,
+        "min_distance": 7.825140100065076e-05,
+        "mean_distance": 0.037520931089967687
+      },
+      {
+        "vocab_size": 16,
+        "percept_size": 1600,
+        "beta": 7.825140100065076e-05,
+        "all_distances_positive": true,
+        "min_distance": 7.825140100065076e-05,
+        "mean_distance": 0.024602859687582232
+      },
+      {
+        "vocab_size": 32,
+        "percept_size": 3200,
+        "beta": 2.6009978782992604e-05,
+        "all_distances_positive": true,
+        "min_distance": 2.6009978782992604e-05,
+        "mean_distance": 0.011254847367845591
+      },
+      {
+        "vocab_size": 64,
+        "percept_size": 6400,
+        "beta": 1.5615338356478325e-05,
+        "all_distances_positive": true,
+        "min_distance": 1.5615338356478325e-05,
+        "mean_distance": 0.006126385161022802
+      },
+      {
+        "vocab_size": 128,
+        "percept_size": 12800,
+        "beta": 1.7738159546754062e-06,
+        "all_distances_positive": true,
+        "min_distance": 1.7738159546754062e-06,
+        "mean_distance": 0.0026574000087140415
+      }
+    ]
+  },
+  "experiment_2_window_invisibility": {
+    "theorem": "Window Invisibility: tau < omega => shift = 0 for all targets",
+    "passed": true,
+    "omega_ms": 13,
+    "n_duration_levels": 8,
+    "n_trials_per_level": 1000,
+    "configurations": [
+      {
+        "tau_ms": 1,
+        "tau_s": 0.001,
+        "omega_s": 0.013,
+        "sub_window": true,
+        "all_shifts_zero": true,
+        "any_shifts_nonzero": false,
+        "mean_shift": 0.0,
+        "theorem_satisfied": true
+      },
+      {
+        "tau_ms": 5,
+        "tau_s": 0.005,
+        "omega_s": 0.013,
+        "sub_window": true,
+        "all_shifts_zero": true,
+        "any_shifts_nonzero": false,
+        "mean_shift": 0.0,
+        "theorem_satisfied": true
+      },
+      {
+        "tau_ms": 10,
+        "tau_s": 0.01,
+        "omega_s": 0.013,
+        "sub_window": true,
+        "all_shifts_zero": true,
+        "any_shifts_nonzero": false,
+        "mean_shift": 0.0,
+        "theorem_satisfied": true
+      },
+      {
+        "tau_ms": 13,
+        "tau_s": 0.013,
+        "omega_s": 0.013,
+        "sub_window": false,
+        "all_shifts_zero": false,
+        "any_shifts_nonzero": true,
+        "mean_shift": 0.5174363505411793,
+        "theorem_satisfied": true
+      },
+      {
+        "tau_ms": 15,
+        "tau_s": 0.015,
+        "omega_s": 0.013,
+        "sub_window": false,
+        "all_shifts_zero": false,
+        "any_shifts_nonzero": true,
+        "mean_shift": 0.5174363505411793,
+        "theorem_satisfied": true
+      },
+      {
+        "tau_ms": 20,
+        "tau_s": 0.02,
+        "omega_s": 0.013,
+        "sub_window": false,
+        "all_shifts_zero": false,
+        "any_shifts_nonzero": true,
+        "mean_shift": 0.5174363505411793,
+        "theorem_satisfied": true
+      },
+      {
+        "tau_ms": 30,
+        "tau_s": 0.03,
+        "omega_s": 0.013,
+        "sub_window": false,
+        "all_shifts_zero": false,
+        "any_shifts_nonzero": true,
+        "mean_shift": 0.5174363505411793,
+        "theorem_satisfied": true
+      },
+      {
+        "tau_ms": 100,
+        "tau_s": 0.1,
+        "omega_s": 0.013,
+        "sub_window": false,
+        "all_shifts_zero": false,
+        "any_shifts_nonzero": true,
+        "mean_shift": 0.5174363505411793,
+        "theorem_satisfied": true
+      }
+    ]
+  },
+  "experiment_3_zero_decoder_shift": {
+    "theorem": "Zero Decoder-Shift: r > r* = tau/omega => shift = 0",
+    "passed": true,
+    "tau_s": 30.0,
+    "omega_ms": 13,
+    "r_star": 2307.6923,
+    "n_rates_tested": 12,
+    "rates": [
+      {
+        "rate": 100,
+        "r_star": 2307.6923,
+        "compressed_duration_ms": 300.0,
+        "above_threshold": false,
+        "shift": 1.0,
+        "shift_is_zero": false,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 500,
+        "r_star": 2307.6923,
+        "compressed_duration_ms": 60.0,
+        "above_threshold": false,
+        "shift": 1.0,
+        "shift_is_zero": false,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 1000,
+        "r_star": 2307.6923,
+        "compressed_duration_ms": 30.0,
+        "above_threshold": false,
+        "shift": 1.0,
+        "shift_is_zero": false,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 1500,
+        "r_star": 2307.6923,
+        "compressed_duration_ms": 20.0,
+        "above_threshold": false,
+        "shift": 1.0,
+        "shift_is_zero": false,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 2000,
+        "r_star": 2307.6923,
+        "compressed_duration_ms": 15.0,
+        "above_threshold": false,
+        "shift": 1.0,
+        "shift_is_zero": false,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 2307,
+        "r_star": 2307.6923,
+        "compressed_duration_ms": 13.0039,
+        "above_threshold": false,
+        "shift": 1.0,
+        "shift_is_zero": false,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 2308,
+        "r_star": 2307.6923,
+        "compressed_duration_ms": 12.9983,
+        "above_threshold": true,
+        "shift": 0.0,
+        "shift_is_zero": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 2309,
+        "r_star": 2307.6923,
+        "compressed_duration_ms": 12.9926,
+        "above_threshold": true,
+        "shift": 0.0,
+        "shift_is_zero": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 2500,
+        "r_star": 2307.6923,
+        "compressed_duration_ms": 12.0,
+        "above_threshold": true,
+        "shift": 0.0,
+        "shift_is_zero": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 5000,
+        "r_star": 2307.6923,
+        "compressed_duration_ms": 6.0,
+        "above_threshold": true,
+        "shift": 0.0,
+        "shift_is_zero": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 7500,
+        "r_star": 2307.6923,
+        "compressed_duration_ms": 4.0,
+        "above_threshold": true,
+        "shift": 0.0,
+        "shift_is_zero": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 10000,
+        "r_star": 2307.6923,
+        "compressed_duration_ms": 3.0,
+        "above_threshold": true,
+        "shift": 0.0,
+        "shift_is_zero": true,
+        "theorem_satisfied": true
+      }
+    ]
+  },
+  "experiment_4_composition_inflation": {
+    "theorem": "T(n,d) = d*(d+1)^(n-1): formula matches explicit enumeration",
+    "passed": true,
+    "n_range": "1..8",
+    "d_values": [
+      2,
+      3,
+      4
+    ],
+    "n_cases": 24,
+    "all_match": true,
+    "cases": [
+      {
+        "n": 1,
+        "d": 2,
+        "enumerated": 2,
+        "formula": 2,
+        "match": true
+      },
+      {
+        "n": 2,
+        "d": 2,
+        "enumerated": 6,
+        "formula": 6,
+        "match": true
+      },
+      {
+        "n": 3,
+        "d": 2,
+        "enumerated": 18,
+        "formula": 18,
+        "match": true
+      },
+      {
+        "n": 4,
+        "d": 2,
+        "enumerated": 54,
+        "formula": 54,
+        "match": true
+      },
+      {
+        "n": 5,
+        "d": 2,
+        "enumerated": 162,
+        "formula": 162,
+        "match": true
+      },
+      {
+        "n": 6,
+        "d": 2,
+        "enumerated": 486,
+        "formula": 486,
+        "match": true
+      },
+      {
+        "n": 7,
+        "d": 2,
+        "enumerated": 1458,
+        "formula": 1458,
+        "match": true
+      },
+      {
+        "n": 8,
+        "d": 2,
+        "enumerated": 4374,
+        "formula": 4374,
+        "match": true
+      },
+      {
+        "n": 1,
+        "d": 3,
+        "enumerated": 3,
+        "formula": 3,
+        "match": true
+      },
+      {
+        "n": 2,
+        "d": 3,
+        "enumerated": 12,
+        "formula": 12,
+        "match": true
+      },
+      {
+        "n": 3,
+        "d": 3,
+        "enumerated": 48,
+        "formula": 48,
+        "match": true
+      },
+      {
+        "n": 4,
+        "d": 3,
+        "enumerated": 192,
+        "formula": 192,
+        "match": true
+      },
+      {
+        "n": 5,
+        "d": 3,
+        "enumerated": 768,
+        "formula": 768,
+        "match": true
+      },
+      {
+        "n": 6,
+        "d": 3,
+        "enumerated": 3072,
+        "formula": 3072,
+        "match": true
+      },
+      {
+        "n": 7,
+        "d": 3,
+        "enumerated": 12288,
+        "formula": 12288,
+        "match": true
+      },
+      {
+        "n": 8,
+        "d": 3,
+        "enumerated": 49152,
+        "formula": 49152,
+        "match": true
+      },
+      {
+        "n": 1,
+        "d": 4,
+        "enumerated": 4,
+        "formula": 4,
+        "match": true
+      },
+      {
+        "n": 2,
+        "d": 4,
+        "enumerated": 20,
+        "formula": 20,
+        "match": true
+      },
+      {
+        "n": 3,
+        "d": 4,
+        "enumerated": 100,
+        "formula": 100,
+        "match": true
+      },
+      {
+        "n": 4,
+        "d": 4,
+        "enumerated": 500,
+        "formula": 500,
+        "match": true
+      },
+      {
+        "n": 5,
+        "d": 4,
+        "enumerated": 2500,
+        "formula": 2500,
+        "match": true
+      },
+      {
+        "n": 6,
+        "d": 4,
+        "enumerated": 12500,
+        "formula": 12500,
+        "match": true
+      },
+      {
+        "n": 7,
+        "d": 4,
+        "enumerated": 62500,
+        "formula": 62500,
+        "match": true
+      },
+      {
+        "n": 8,
+        "d": 4,
+        "enumerated": 312500,
+        "formula": 312500,
+        "match": true
+      }
+    ]
+  },
+  "experiment_5_sender_graph_invariance": {
+    "theorem": "Sender graph vertex count T(n,d) is invariant under compression rate",
+    "passed": true,
+    "rates_tested": [
+      1,
+      10,
+      100,
+      1000,
+      7500
+    ],
+    "n_configurations": 8,
+    "configurations": [
+      {
+        "n": 3,
+        "d": 2,
+        "T_nd": 18,
+        "counts_by_rate": {
+          "1": 18,
+          "10": 18,
+          "100": 18,
+          "1000": 18,
+          "7500": 18
+        },
+        "rate_invariant": true
+      },
+      {
+        "n": 3,
+        "d": 3,
+        "T_nd": 48,
+        "counts_by_rate": {
+          "1": 48,
+          "10": 48,
+          "100": 48,
+          "1000": 48,
+          "7500": 48
+        },
+        "rate_invariant": true
+      },
+      {
+        "n": 5,
+        "d": 2,
+        "T_nd": 162,
+        "counts_by_rate": {
+          "1": 162,
+          "10": 162,
+          "100": 162,
+          "1000": 162,
+          "7500": 162
+        },
+        "rate_invariant": true
+      },
+      {
+        "n": 5,
+        "d": 3,
+        "T_nd": 768,
+        "counts_by_rate": {
+          "1": 768,
+          "10": 768,
+          "100": 768,
+          "1000": 768,
+          "7500": 768
+        },
+        "rate_invariant": true
+      },
+      {
+        "n": 10,
+        "d": 2,
+        "T_nd": 39366,
+        "counts_by_rate": {
+          "1": 39366,
+          "10": 39366,
+          "100": 39366,
+          "1000": 39366,
+          "7500": 39366
+        },
+        "rate_invariant": true
+      },
+      {
+        "n": 10,
+        "d": 3,
+        "T_nd": 786432,
+        "counts_by_rate": {
+          "1": 786432,
+          "10": 786432,
+          "100": 786432,
+          "1000": 786432,
+          "7500": 786432
+        },
+        "rate_invariant": true
+      },
+      {
+        "n": 20,
+        "d": 2,
+        "T_nd": 2324522934,
+        "counts_by_rate": {
+          "1": 2324522934,
+          "10": 2324522934,
+          "100": 2324522934,
+          "1000": 2324522934,
+          "7500": 2324522934
+        },
+        "rate_invariant": true
+      },
+      {
+        "n": 20,
+        "d": 3,
+        "T_nd": 824633720832,
+        "counts_by_rate": {
+          "1": 824633720832,
+          "10": 824633720832,
+          "100": 824633720832,
+          "1000": 824633720832,
+          "7500": 824633720832
+        },
+        "rate_invariant": true
+      }
+    ]
+  },
+  "experiment_6_propagation_equilibrium": {
+    "theorem": "Propagation equilibrium holds iff r > r* = tau/omega",
+    "passed": true,
+    "tau_s": 30.0,
+    "omega_ms": 13,
+    "r_star": 2307.6923,
+    "n": 10,
+    "d": 3,
+    "n_rates_tested": 9,
+    "rates": [
+      {
+        "rate": 100,
+        "compressed_duration_ms": 300.0,
+        "sender_complete": true,
+        "sender_vertex_count": 786432,
+        "receiver_null": false,
+        "equilibrium": false,
+        "above_r_star": false,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 500,
+        "compressed_duration_ms": 60.0,
+        "sender_complete": true,
+        "sender_vertex_count": 786432,
+        "receiver_null": false,
+        "equilibrium": false,
+        "above_r_star": false,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 1000,
+        "compressed_duration_ms": 30.0,
+        "sender_complete": true,
+        "sender_vertex_count": 786432,
+        "receiver_null": false,
+        "equilibrium": false,
+        "above_r_star": false,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 2000,
+        "compressed_duration_ms": 15.0,
+        "sender_complete": true,
+        "sender_vertex_count": 786432,
+        "receiver_null": false,
+        "equilibrium": false,
+        "above_r_star": false,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 2308,
+        "compressed_duration_ms": 12.9983,
+        "sender_complete": true,
+        "sender_vertex_count": 786432,
+        "receiver_null": true,
+        "equilibrium": true,
+        "above_r_star": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 2309,
+        "compressed_duration_ms": 12.9926,
+        "sender_complete": true,
+        "sender_vertex_count": 786432,
+        "receiver_null": true,
+        "equilibrium": true,
+        "above_r_star": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 3000,
+        "compressed_duration_ms": 10.0,
+        "sender_complete": true,
+        "sender_vertex_count": 786432,
+        "receiver_null": true,
+        "equilibrium": true,
+        "above_r_star": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 5000,
+        "compressed_duration_ms": 6.0,
+        "sender_complete": true,
+        "sender_vertex_count": 786432,
+        "receiver_null": true,
+        "equilibrium": true,
+        "above_r_star": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 7500,
+        "compressed_duration_ms": 4.0,
+        "sender_complete": true,
+        "sender_vertex_count": 786432,
+        "receiver_null": true,
+        "equilibrium": true,
+        "above_r_star": true,
+        "theorem_satisfied": true
+      }
+    ]
+  },
+  "experiment_7_telemetry_preservation": {
+    "theorem": "Compression preserves telemetry labels and ordering; only timestamps scale",
+    "passed": true,
+    "tau_s": 30.0,
+    "n_segments": 5,
+    "n_events_per_transmission": 7,
+    "reference_labels": [
+      "tx-start",
+      "seg-1-complete",
+      "seg-2-complete",
+      "seg-3-complete",
+      "seg-4-complete",
+      "seg-5-complete",
+      "tx-end"
+    ],
+    "n_rates_tested": 7,
+    "rates": [
+      {
+        "rate": 1,
+        "compressed_duration_ms": 30000.0,
+        "labels_preserved": true,
+        "ordering_preserved": true,
+        "timestamps_scaled_correctly": true,
+        "theorem_satisfied": true,
+        "n_events": 7
+      },
+      {
+        "rate": 10,
+        "compressed_duration_ms": 3000.0,
+        "labels_preserved": true,
+        "ordering_preserved": true,
+        "timestamps_scaled_correctly": true,
+        "theorem_satisfied": true,
+        "n_events": 7
+      },
+      {
+        "rate": 100,
+        "compressed_duration_ms": 300.0,
+        "labels_preserved": true,
+        "ordering_preserved": true,
+        "timestamps_scaled_correctly": true,
+        "theorem_satisfied": true,
+        "n_events": 7
+      },
+      {
+        "rate": 1000,
+        "compressed_duration_ms": 30.0,
+        "labels_preserved": true,
+        "ordering_preserved": true,
+        "timestamps_scaled_correctly": true,
+        "theorem_satisfied": true,
+        "n_events": 7
+      },
+      {
+        "rate": 2308,
+        "compressed_duration_ms": 12.998267,
+        "labels_preserved": true,
+        "ordering_preserved": true,
+        "timestamps_scaled_correctly": true,
+        "theorem_satisfied": true,
+        "n_events": 7
+      },
+      {
+        "rate": 7500,
+        "compressed_duration_ms": 4.0,
+        "labels_preserved": true,
+        "ordering_preserved": true,
+        "timestamps_scaled_correctly": true,
+        "theorem_satisfied": true,
+        "n_events": 7
+      },
+      {
+        "rate": 100000,
+        "compressed_duration_ms": 0.3,
+        "labels_preserved": true,
+        "ordering_preserved": true,
+        "timestamps_scaled_correctly": true,
+        "theorem_satisfied": true,
+        "n_events": 7
+      }
+    ]
+  },
+  "experiment_8_adversarial_quiescence": {
+    "theorem": "Adversarial Quiescence: compressed telemetry is quiescent with monitoring receiver",
+    "passed": true,
+    "monitoring_vocab_size": 21,
+    "beta_mon": 1,
+    "n_valid_rates_tested": 9,
+    "n_invalid_sequences_tested": 5,
+    "n_total_cases": 14,
+    "all_compressed_quiescent": true,
+    "all_invalid_non_quiescent": true,
+    "cases": [
+      {
+        "rate": 1,
+        "compressed_duration_ms": 30000.0,
+        "observed_labels_match_reference": true,
+        "decoded_pattern": "valid",
+        "dist_to_valid_pattern": 0,
+        "cross_demand": 0,
+        "quiescent": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 10,
+        "compressed_duration_ms": 3000.0,
+        "observed_labels_match_reference": true,
+        "decoded_pattern": "valid",
+        "dist_to_valid_pattern": 0,
+        "cross_demand": 0,
+        "quiescent": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 100,
+        "compressed_duration_ms": 300.0,
+        "observed_labels_match_reference": true,
+        "decoded_pattern": "valid",
+        "dist_to_valid_pattern": 0,
+        "cross_demand": 0,
+        "quiescent": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 500,
+        "compressed_duration_ms": 60.0,
+        "observed_labels_match_reference": true,
+        "decoded_pattern": "valid",
+        "dist_to_valid_pattern": 0,
+        "cross_demand": 0,
+        "quiescent": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 1000,
+        "compressed_duration_ms": 30.0,
+        "observed_labels_match_reference": true,
+        "decoded_pattern": "valid",
+        "dist_to_valid_pattern": 0,
+        "cross_demand": 0,
+        "quiescent": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 2308,
+        "compressed_duration_ms": 12.998267,
+        "observed_labels_match_reference": true,
+        "decoded_pattern": "valid",
+        "dist_to_valid_pattern": 0,
+        "cross_demand": 0,
+        "quiescent": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 2309,
+        "compressed_duration_ms": 12.992638,
+        "observed_labels_match_reference": true,
+        "decoded_pattern": "valid",
+        "dist_to_valid_pattern": 0,
+        "cross_demand": 0,
+        "quiescent": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 7500,
+        "compressed_duration_ms": 4.0,
+        "observed_labels_match_reference": true,
+        "decoded_pattern": "valid",
+        "dist_to_valid_pattern": 0,
+        "cross_demand": 0,
+        "quiescent": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": 100000,
+        "compressed_duration_ms": 0.3,
+        "observed_labels_match_reference": true,
+        "decoded_pattern": "valid",
+        "dist_to_valid_pattern": 0,
+        "cross_demand": 0,
+        "quiescent": true,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": "invalid_input",
+        "compressed_duration_ms": null,
+        "observed_labels_match_reference": false,
+        "decoded_pattern": "invalid_0",
+        "dist_to_valid_pattern": 1,
+        "cross_demand": 1,
+        "quiescent": false,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": "invalid_input",
+        "compressed_duration_ms": null,
+        "observed_labels_match_reference": false,
+        "decoded_pattern": "invalid_1",
+        "dist_to_valid_pattern": 1,
+        "cross_demand": 1,
+        "quiescent": false,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": "invalid_input",
+        "compressed_duration_ms": null,
+        "observed_labels_match_reference": false,
+        "decoded_pattern": "invalid_2",
+        "dist_to_valid_pattern": 1,
+        "cross_demand": 1,
+        "quiescent": false,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": "invalid_input",
+        "compressed_duration_ms": null,
+        "observed_labels_match_reference": false,
+        "decoded_pattern": "invalid_3",
+        "dist_to_valid_pattern": 1,
+        "cross_demand": 1,
+        "quiescent": false,
+        "theorem_satisfied": true
+      },
+      {
+        "rate": "invalid_input",
+        "compressed_duration_ms": null,
+        "observed_labels_match_reference": false,
+        "decoded_pattern": "invalid_4",
+        "dist_to_valid_pattern": 1,
+        "cross_demand": 1,
+        "quiescent": false,
+        "theorem_satisfied": true
+      }
+    ]
+  },
+  "summary": {
+    "all_experiments_passed": true,
+    "n_experiments": 7,
+    "experiment_names": [
+      "experiment_1_floor_theorem",
+      "experiment_2_window_invisibility",
+      "experiment_3_zero_decoder_shift",
+      "experiment_4_composition_inflation",
+      "experiment_5_sender_graph_invariance",
+      "experiment_6_propagation_equilibrium",
+      "experiment_7_telemetry_preservation",
+      "experiment_8_adversarial_quiescence"
+    ],
+    "pass_status": {
+      "experiment_1_floor_theorem": true,
+      "experiment_2_window_invisibility": true,
+      "experiment_3_zero_decoder_shift": true,
+      "experiment_4_composition_inflation": true,
+      "experiment_5_sender_graph_invariance": true,
+      "experiment_6_propagation_equilibrium": true,
+      "experiment_7_telemetry_preservation": true,
+      "experiment_8_adversarial_quiescence": true
+    }
+  }
+}
