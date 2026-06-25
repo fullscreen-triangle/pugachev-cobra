@@ -106,3 +106,12 @@ Desktop.ini
 
 # ---- Project-specific ------------------------------------------------
 /effects
+
+# ---- Large media files (too large for GitHub, store locally or via LFS) ----
+*.webm
+*.mkv
+*.mp4
+*.avi
+*.mov
+*.wmv
+assets/leave-before-you-arrive/*.mkv
