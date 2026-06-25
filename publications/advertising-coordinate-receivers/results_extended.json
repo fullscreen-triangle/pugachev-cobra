@@ -1,0 +1,607 @@
+{
+  "E12_percept_cell": {
+    "8": {
+      "mean_diameter": 47.20113639117113,
+      "min_diameter": 4.919013189239046,
+      "max_diameter": 96.7156742606811,
+      "point_cells": 0,
+      "total_cells": 800,
+      "fraction_positive_diameter": 1.0
+    },
+    "16": {
+      "mean_diameter": 30.85282003583474,
+      "min_diameter": 0.0,
+      "max_diameter": 86.81029960683757,
+      "point_cells": 5,
+      "total_cells": 1600,
+      "fraction_positive_diameter": 0.996875
+    },
+    "32": {
+      "mean_diameter": 18.393632746651644,
+      "min_diameter": 0.0,
+      "max_diameter": 56.260936146226356,
+      "point_cells": 63,
+      "total_cells": 3200,
+      "fraction_positive_diameter": 0.9803125
+    }
+  },
+  "E13_opinion_slack": {
+    "n_facts": 50,
+    "n_receivers": 200,
+    "mean_unique_tokens_per_fact": 12.0,
+    "max_unique_tokens_per_fact": 12,
+    "min_unique_tokens_per_fact": 12,
+    "fraction_pair_disagreements": 0.9168954773869347,
+    "all_unique_per_fact": [
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12,
+      12
+    ]
+  },
+  "E14_recall_reindividuation": {
+    "n_receivers": 150,
+    "n_stimuli": 40,
+    "mean_fraction_changed": 0.5896666666666666,
+    "min_fraction_changed": 0.275,
+    "max_fraction_changed": 0.9,
+    "receivers_with_any_change": 150,
+    "receivers_with_no_change": 0,
+    "all_fractions": [
+      0.525,
+      0.325,
+      0.425,
+      0.8,
+      0.475,
+      0.6,
+      0.55,
+      0.8,
+      0.375,
+      0.6,
+      0.525,
+      0.675,
+      0.7,
+      0.675,
+      0.525,
+      0.85,
+      0.6,
+      0.725,
+      0.425,
+      0.825,
+      0.6,
+      0.45,
+      0.7,
+      0.7,
+      0.525,
+      0.6,
+      0.775,
+      0.4,
+      0.625,
+      0.7,
+      0.6,
+      0.85,
+      0.75,
+      0.475,
+      0.675,
+      0.725,
+      0.625,
+      0.325,
+      0.6,
+      0.55,
+      0.525,
+      0.9,
+      0.725,
+      0.6,
+      0.35,
+      0.65,
+      0.525,
+      0.75,
+      0.375,
+      0.65,
+      0.75,
+      0.875,
+      0.35,
+      0.85,
+      0.825,
+      0.775,
+      0.45,
+      0.6,
+      0.525,
+      0.8,
+      0.425,
+      0.65,
+      0.575,
+      0.675,
+      0.6,
+      0.45,
+      0.7,
+      0.45,
+      0.8,
+      0.45,
+      0.4,
+      0.6,
+      0.725,
+      0.675,
+      0.275,
+      0.725,
+      0.525,
+      0.75,
+      0.5,
+      0.425,
+      0.6,
+      0.7,
+      0.525,
+      0.65,
+      0.35,
+      0.7,
+      0.625,
+      0.675,
+      0.55,
+      0.575,
+      0.75,
+      0.725,
+      0.5,
+      0.425,
+      0.4,
+      0.5,
+      0.525,
+      0.65,
+      0.65,
+      0.575,
+      0.625,
+      0.85,
+      0.275,
+      0.775,
+      0.5,
+      0.5,
+      0.4,
+      0.275,
+      0.575,
+      0.4,
+      0.55,
+      0.575,
+      0.6,
+      0.425,
+      0.475,
+      0.775,
+      0.5,
+      0.525,
+      0.65,
+      0.525,
+      0.55,
+      0.625,
+      0.45,
+      0.8,
+      0.6,
+      0.6,
+      0.5,
+      0.475,
+      0.725,
+      0.7,
+      0.75,
+      0.725,
+      0.55,
+      0.725,
+      0.375,
+      0.6,
+      0.6,
+      0.7,
+      0.4,
+      0.7,
+      0.55,
+      0.525,
+      0.4,
+      0.65,
+      0.75,
+      0.35,
+      0.475,
+      0.425,
+      0.8,
+      0.475
+    ]
+  },
+  "E15_converse_biconditional": {
+    "positive_floor": {
+      "termination_rate": 1.0,
+      "mean_walk_length": 5.053333333333334,
+      "n_distinct_cells_confirmed": 300
+    },
+    "zero_floor": {
+      "termination_rate": 0.0,
+      "mean_walk_length": Infinity,
+      "description": "Zero floor: codebook collapses to one token; no distinct terminal cell; every walk stays in the same undifferentiated cell indefinitely."
+    },
+    "floor_sweep": [
+      {
+        "codebook_size": 2,
+        "floor": 70.8214762139201,
+        "n_distinct_cells": 2
+      },
+      {
+        "codebook_size": 4,
+        "floor": 60.738994724219154,
+        "n_distinct_cells": 4
+      },
+      {
+        "codebook_size": 8,
+        "floor": 34.68556033609293,
+        "n_distinct_cells": 8
+      },
+      {
+        "codebook_size": 16,
+        "floor": 44.84900886716671,
+        "n_distinct_cells": 16
+      },
+      {
+        "codebook_size": 32,
+        "floor": 19.97010653764361,
+        "n_distinct_cells": 32
+      }
+    ]
+  },
+  "E16_bridge_endpoint_vs_route": {
+    "n_trials": 400,
+    "endpoint_audit_misses": 400,
+    "endpoint_miss_rate": 1.0,
+    "route_audit_catches": 400,
+    "route_catch_rate": 1.0,
+    "mean_eta_magnitude_bridge": 2.2403903505211242,
+    "min_eta_magnitude_bridge": 0.23609906980942855
+  },
+  "E17_dissidents_distribution": {
+    "n_bridges": 50,
+    "n_receivers": 500,
+    "mean_dissidents": 224.12,
+    "mean_compliant": 165.72,
+    "mean_perpetrators": 40.54,
+    "all_three_present_rate": 1.0,
+    "all_distributions": [
+      {
+        "dissidents": 220,
+        "compliant": 178,
+        "perpetrators": 40,
+        "not_reached": 62
+      },
+      {
+        "dissidents": 227,
+        "compliant": 160,
+        "perpetrators": 33,
+        "not_reached": 80
+      },
+      {
+        "dissidents": 224,
+        "compliant": 169,
+        "perpetrators": 36,
+        "not_reached": 71
+      },
+      {
+        "dissidents": 220,
+        "compliant": 160,
+        "perpetrators": 46,
+        "not_reached": 74
+      },
+      {
+        "dissidents": 229,
+        "compliant": 170,
+        "perpetrators": 38,
+        "not_reached": 63
+      },
+      {
+        "dissidents": 226,
+        "compliant": 174,
+        "perpetrators": 41,
+        "not_reached": 59
+      },
+      {
+        "dissidents": 204,
+        "compliant": 183,
+        "perpetrators": 38,
+        "not_reached": 75
+      },
+      {
+        "dissidents": 226,
+        "compliant": 164,
+        "perpetrators": 44,
+        "not_reached": 66
+      },
+      {
+        "dissidents": 216,
+        "compliant": 175,
+        "perpetrators": 43,
+        "not_reached": 66
+      },
+      {
+        "dissidents": 218,
+        "compliant": 167,
+        "perpetrators": 49,
+        "not_reached": 66
+      },
+      {
+        "dissidents": 222,
+        "compliant": 164,
+        "perpetrators": 34,
+        "not_reached": 80
+      },
+      {
+        "dissidents": 234,
+        "compliant": 150,
+        "perpetrators": 48,
+        "not_reached": 68
+      },
+      {
+        "dissidents": 218,
+        "compliant": 180,
+        "perpetrators": 35,
+        "not_reached": 67
+      },
+      {
+        "dissidents": 242,
+        "compliant": 143,
+        "perpetrators": 40,
+        "not_reached": 75
+      },
+      {
+        "dissidents": 219,
+        "compliant": 165,
+        "perpetrators": 44,
+        "not_reached": 72
+      },
+      {
+        "dissidents": 214,
+        "compliant": 170,
+        "perpetrators": 47,
+        "not_reached": 69
+      },
+      {
+        "dissidents": 212,
+        "compliant": 170,
+        "perpetrators": 43,
+        "not_reached": 75
+      },
+      {
+        "dissidents": 223,
+        "compliant": 179,
+        "perpetrators": 33,
+        "not_reached": 65
+      },
+      {
+        "dissidents": 210,
+        "compliant": 166,
+        "perpetrators": 42,
+        "not_reached": 82
+      },
+      {
+        "dissidents": 209,
+        "compliant": 169,
+        "perpetrators": 41,
+        "not_reached": 81
+      },
+      {
+        "dissidents": 210,
+        "compliant": 176,
+        "perpetrators": 33,
+        "not_reached": 81
+      },
+      {
+        "dissidents": 243,
+        "compliant": 148,
+        "perpetrators": 30,
+        "not_reached": 79
+      },
+      {
+        "dissidents": 244,
+        "compliant": 157,
+        "perpetrators": 36,
+        "not_reached": 63
+      },
+      {
+        "dissidents": 255,
+        "compliant": 145,
+        "perpetrators": 37,
+        "not_reached": 63
+      },
+      {
+        "dissidents": 216,
+        "compliant": 188,
+        "perpetrators": 33,
+        "not_reached": 63
+      },
+      {
+        "dissidents": 234,
+        "compliant": 162,
+        "perpetrators": 39,
+        "not_reached": 65
+      },
+      {
+        "dissidents": 216,
+        "compliant": 167,
+        "perpetrators": 41,
+        "not_reached": 76
+      },
+      {
+        "dissidents": 237,
+        "compliant": 165,
+        "perpetrators": 43,
+        "not_reached": 55
+      },
+      {
+        "dissidents": 232,
+        "compliant": 159,
+        "perpetrators": 47,
+        "not_reached": 62
+      },
+      {
+        "dissidents": 240,
+        "compliant": 162,
+        "perpetrators": 38,
+        "not_reached": 60
+      },
+      {
+        "dissidents": 206,
+        "compliant": 168,
+        "perpetrators": 41,
+        "not_reached": 85
+      },
+      {
+        "dissidents": 246,
+        "compliant": 144,
+        "perpetrators": 40,
+        "not_reached": 70
+      },
+      {
+        "dissidents": 206,
+        "compliant": 188,
+        "perpetrators": 35,
+        "not_reached": 71
+      },
+      {
+        "dissidents": 231,
+        "compliant": 154,
+        "perpetrators": 38,
+        "not_reached": 77
+      },
+      {
+        "dissidents": 228,
+        "compliant": 163,
+        "perpetrators": 42,
+        "not_reached": 67
+      },
+      {
+        "dissidents": 228,
+        "compliant": 157,
+        "perpetrators": 34,
+        "not_reached": 81
+      },
+      {
+        "dissidents": 202,
+        "compliant": 172,
+        "perpetrators": 45,
+        "not_reached": 81
+      },
+      {
+        "dissidents": 211,
+        "compliant": 163,
+        "perpetrators": 47,
+        "not_reached": 79
+      },
+      {
+        "dissidents": 243,
+        "compliant": 151,
+        "perpetrators": 49,
+        "not_reached": 57
+      },
+      {
+        "dissidents": 226,
+        "compliant": 159,
+        "perpetrators": 50,
+        "not_reached": 65
+      },
+      {
+        "dissidents": 226,
+        "compliant": 177,
+        "perpetrators": 35,
+        "not_reached": 62
+      },
+      {
+        "dissidents": 221,
+        "compliant": 154,
+        "perpetrators": 50,
+        "not_reached": 75
+      },
+      {
+        "dissidents": 226,
+        "compliant": 163,
+        "perpetrators": 44,
+        "not_reached": 67
+      },
+      {
+        "dissidents": 220,
+        "compliant": 182,
+        "perpetrators": 37,
+        "not_reached": 61
+      },
+      {
+        "dissidents": 214,
+        "compliant": 177,
+        "perpetrators": 49,
+        "not_reached": 60
+      },
+      {
+        "dissidents": 230,
+        "compliant": 165,
+        "perpetrators": 45,
+        "not_reached": 60
+      },
+      {
+        "dissidents": 233,
+        "compliant": 154,
+        "perpetrators": 33,
+        "not_reached": 80
+      },
+      {
+        "dissidents": 235,
+        "compliant": 157,
+        "perpetrators": 39,
+        "not_reached": 69
+      },
+      {
+        "dissidents": 212,
+        "compliant": 178,
+        "perpetrators": 42,
+        "not_reached": 68
+      },
+      {
+        "dissidents": 222,
+        "compliant": 175,
+        "perpetrators": 40,
+        "not_reached": 63
+      }
+    ]
+  }
+}

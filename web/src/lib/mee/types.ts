@@ -10,6 +10,7 @@ export type TokenKind =
   | 'STRING'
   | 'NUMBER'
   | 'TIME'          // e.g. 15s, 2.5s
+  | 'DASH'          // - (used in at 0s-5s ranges)
   | 'PIPE'          // |>
   | 'LBRACE'        // {
   | 'RBRACE'        // }
@@ -33,6 +34,8 @@ export const KEYWORDS = new Set([
   'via', 'emit',
   'detect', 'select', 'apply_to_selection', 'for_each',
   'shader',
+  // Timeline extensions
+  'audio', 'every', 'mute', 'bw', 'text', 'boxes', 'glitch',
 ]);
 
 export interface Token {
@@ -73,6 +76,7 @@ export interface PipelineNode {
 
 export type PipelineStep =
   | ClipNode
+  | AudioNode
   | ActsLikeNode
   | ComposeNode
   | RenderNode
@@ -80,13 +84,40 @@ export type PipelineStep =
   | SelectNode
   | ApplyToSelectionNode
   | ForEachNode
-  | ShaderNode;
+  | ShaderNode
+  | SegmentNode
+  | PeriodicNode;
 
 export interface ClipNode {
   kind: 'Clip';
   path: string;
   at: number;   // seconds
   for: number;  // seconds
+}
+
+// Audio track: audio("/path/to/file.mp3", mute_video: true)
+export interface AudioNode {
+  kind: 'Audio';
+  path: string;
+  muteVideo: boolean;
+  startFrom: number;  // seconds into the audio file to start
+  volume: number;     // 0..1, default 1
+}
+
+// Time-ranged segment: at 2s-5s : effect1(), effect2()
+export interface SegmentNode {
+  kind: 'Segment';
+  startSec: number;
+  endSec: number;    // -1 means "to end of clip"
+  effects: PrimArgNode[];
+}
+
+// Periodic effect: every 5s : glitch(intensity: 0.4)
+export interface PeriodicNode {
+  kind: 'Periodic';
+  periodSec: number;
+  durationSec: number;  // how long each instance lasts, default = 1s
+  effects: PrimArgNode[];
 }
 
 export interface ActsLikeNode {
@@ -139,19 +170,46 @@ export interface WhenClauseNode {
 
 export type IRNode =
   | IRClip
+  | IRAudio
   | IRPrim
   | IRCompose
   | IRHole
   | IRDetect
   | IRSelect
   | IRObjectEffect
-  | IRShader;
+  | IRShader
+  | IRSegment
+  | IRPeriodic;
 
 export interface IRClip {
   kind: 'IRClip';
   path: string;
   at: number;
   duration: number;
+}
+
+export interface IRAudio {
+  kind: 'IRAudio';
+  path: string;
+  muteVideo: boolean;
+  startFrom: number;
+  volume: number;
+}
+
+// Remotion <Sequence> wrapping effects for a time window
+export interface IRSegment {
+  kind: 'IRSegment';
+  startSec: number;
+  endSec: number;
+  effects: IRNode[];
+}
+
+// Repeated effect instances every N seconds
+export interface IRPeriodic {
+  kind: 'IRPeriodic';
+  periodSec: number;
+  durationSec: number;
+  effects: IRNode[];
 }
 
 export interface IRPrim {

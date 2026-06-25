@@ -8,9 +8,10 @@
 import {
   Token, TokenKind,
   SceneNode, PipelineNode, PipelineStep,
-  ClipNode, ActsLikeNode, ComposeNode, PrimArgNode,
+  ClipNode, AudioNode, ActsLikeNode, ComposeNode, PrimArgNode,
   RenderNode, GoalNode, BrandNode, DispatchNode, WhenClauseNode,
   DetectNode, SelectNode, ApplyToSelectionNode, ForEachNode,
+  SegmentNode, PeriodicNode,
   Diagnostic,
 } from './types';
 
@@ -45,7 +46,6 @@ export function parse(tokens: Token[]): ParseResult {
     return cur;
   };
 
-  // skip to recovery point on error
   const skipTo = (kinds: TokenKind[]) => {
     while (peek().kind !== 'EOF' && !kinds.includes(peek().kind)) advance();
   };
@@ -76,23 +76,14 @@ export function parse(tokens: Token[]): ParseResult {
       } else if (t.kind === 'KEYWORD' && t.value === 'dispatch') {
         dispatch = parseDispatch();
       } else if (t.kind === 'KEYWORD' && t.value === 'clip') {
-        // inline pipeline at scene root
         pipeline = parsePipeline();
       } else {
-        // unknown token at scene level — skip
         advance();
       }
     }
     eat('RBRACE');
 
-    return {
-      kind: 'Scene',
-      name: nameToken.value,
-      pipeline,
-      goal,
-      brands,
-      dispatch,
-    };
+    return { kind: 'Scene', name: nameToken.value, pipeline, goal, brands, dispatch };
   }
 
   function parsePipeline(): PipelineNode {
@@ -104,58 +95,66 @@ export function parse(tokens: Token[]): ParseResult {
       if (clip) steps.push(clip);
     }
 
-    // subsequent steps joined by |>
-    while (eat('PIPE')) {
+    // Timeline keywords accepted bare (no |> required) OR after |>
+    const TIMELINE_KW = new Set(['audio', 'at', 'every', 'acts_like', 'compose',
+      'render', 'detect', 'select', 'apply_to_selection', 'for_each', 'shader', 'brand']);
+
+    while (true) {
+      const hasPipe = eat('PIPE');
       const t = peek();
-      if (t.kind === 'KEYWORD' && t.value === 'acts_like') {
-        steps.push(parseActsLike());
-      } else if (t.kind === 'KEYWORD' && t.value === 'compose') {
-        steps.push(parseCompose());
-      } else if (t.kind === 'KEYWORD' && t.value === 'render') {
-        steps.push(parseRender());
-      } else if (t.kind === 'KEYWORD' && t.value === 'detect') {
-        steps.push(parseDetect());
-      } else if (t.kind === 'KEYWORD' && t.value === 'select') {
-        steps.push(parseSelect());
-      } else if (t.kind === 'KEYWORD' && t.value === 'apply_to_selection') {
-        steps.push(parseApplyToSelection());
-      } else if (t.kind === 'KEYWORD' && t.value === 'for_each') {
-        steps.push(parseForEach());
-      } else if (t.kind === 'KEYWORD' && t.value === 'shader') {
-        steps.push(parseShader());
-      } else if (t.kind === 'KEYWORD' && t.value === 'brand') {
-        // brand used inline as a catalyst — treat as compose step
-        advance(); // eat 'brand'
-        const nameT = peek();
-        let name = '';
-        if (nameT.kind === 'IDENT' || nameT.kind === 'KEYWORD') { name = nameT.value; advance(); }
-        let confidence = 0.8;
-        if (eat('LPAREN')) {
-          // optional confidence= param
-          while (peek().kind !== 'RPAREN' && peek().kind !== 'EOF') {
-            const k = advance().value;
-            eat('EQUALS');
-            const v = advance().value;
-            if (k === 'confidence') confidence = parseFloat(v);
-          }
-          eat('RPAREN');
-        }
-        steps.push({
-          kind: 'Compose',
-          effects: [{ kind: 'PrimArg', name: `brand:${name}`, params: { confidence } }],
-        });
-      } else {
-        // unknown step — skip token
-        diagnostics.push({
-          level: 'warning', code: 'UnknownStep',
-          message: `Unknown pipeline step '${t.value}', skipping`,
-          line: t.line, col: t.col,
-        });
-        advance();
-      }
+
+      if (t.kind === 'EOF' || t.kind === 'RBRACE') break;
+
+      const isTimelineKw = t.kind === 'KEYWORD' && TIMELINE_KW.has(t.value);
+      if (!hasPipe && !isTimelineKw) break;
+
+      const step = parseNamedStep(t);
+      if (step) steps.push(step);
     }
 
     return { kind: 'Pipeline', steps };
+  }
+
+  function parseNamedStep(t: Token): PipelineStep | null {
+    if (t.kind === 'KEYWORD') {
+      switch (t.value) {
+        case 'acts_like':         return parseActsLike();
+        case 'compose':           return parseCompose();
+        case 'render':            return parseRender();
+        case 'detect':            return parseDetect();
+        case 'select':            return parseSelect();
+        case 'apply_to_selection': return parseApplyToSelection();
+        case 'for_each':          return parseForEach();
+        case 'shader':            return parseShader();
+        case 'audio':             return parseAudio();
+        case 'at':                return parseSegment();
+        case 'every':             return parsePeriodic();
+        case 'brand': {
+          advance();
+          const nameT = peek();
+          let name = '';
+          if (nameT.kind === 'IDENT' || nameT.kind === 'KEYWORD') { name = nameT.value; advance(); }
+          let confidence = 0.8;
+          if (eat('LPAREN')) {
+            while (peek().kind !== 'RPAREN' && peek().kind !== 'EOF') {
+              const k = advance().value;
+              eat('EQUALS');
+              const v = advance().value;
+              if (k === 'confidence') confidence = parseFloat(v);
+            }
+            eat('RPAREN');
+          }
+          return { kind: 'Compose', effects: [{ kind: 'PrimArg', name: `brand:${name}`, params: { confidence } }] };
+        }
+      }
+    }
+    diagnostics.push({
+      level: 'warning', code: 'UnknownStep',
+      message: `Unknown pipeline step '${t.value}', skipping`,
+      line: t.line, col: t.col,
+    });
+    advance();
+    return null;
   }
 
   function parseClip(): ClipNode | null {
@@ -167,10 +166,10 @@ export function parse(tokens: Token[]): ParseResult {
     else { diagnostics.push({ level: 'error', code: 'ParseError', message: 'clip() expects a string path' }); }
 
     let at = 0;
-    let forDuration = -1; // -1 = full clip
+    let forDuration = -1;
 
     while (peek().kind === 'COMMA') {
-      advance(); // eat comma
+      advance();
       const key = peek();
       if ((key.kind === 'KEYWORD' || key.kind === 'IDENT') && key.value === 'at') {
         advance(); eat('EQUALS');
@@ -181,12 +180,126 @@ export function parse(tokens: Token[]): ParseResult {
         const v = peek();
         if (v.kind === 'TIME' || v.kind === 'NUMBER') { forDuration = parseFloat(v.value); advance(); }
       } else {
-        advance(); // skip unknown key
+        advance();
       }
     }
     eat('RPAREN');
 
     return { kind: 'Clip', path, at, for: forDuration };
+  }
+
+  // audio("/path.mp3", mute_video: true, start_from: 0s, volume: 0.8)
+  // audio(mute_video: true)  — path omitted when track is wired from the timeline
+  function parseAudio(): AudioNode {
+    expect('KEYWORD', 'audio');
+    expect('LPAREN');
+    let path = '';
+    // Path is optional — only a string literal as first token
+    if (peek().kind === 'STRING') { path = peek().value; advance(); }
+
+    let muteVideo = false;
+    let startFrom = 0;
+    let volume = 1;
+
+    // Parse remaining key:value or key=value pairs separated by commas
+    while (peek().kind !== 'RPAREN' && peek().kind !== 'EOF') {
+      eat('COMMA');
+      if (peek().kind === 'RPAREN') break;
+      const key = peek();
+      if (key.kind === 'IDENT' || key.kind === 'KEYWORD') {
+        const k = key.value; advance();
+        eat('COLON'); eat('EQUALS');
+        const v = peek();
+        if (k === 'mute_video' || k === 'mute') {
+          muteVideo = v.value === 'true' || v.value === '1';
+          advance();
+        } else if (k === 'start_from') {
+          if (v.kind === 'TIME' || v.kind === 'NUMBER') { startFrom = parseFloat(v.value); advance(); }
+        } else if (k === 'volume') {
+          if (v.kind === 'NUMBER') { volume = parseFloat(v.value); advance(); }
+        } else {
+          advance();
+        }
+      } else {
+        advance();
+      }
+    }
+    eat('RPAREN');
+
+    return { kind: 'Audio', path, muteVideo, startFrom, volume };
+  }
+
+  // at 0s-5s : detect(person), boxes()
+  // at 2s-5s : text("MBENDE", style: scale)
+  function parseSegment(): SegmentNode | null {
+    expect('KEYWORD', 'at');
+
+    const startTok = peek();
+    let startSec = 0;
+    if (startTok.kind === 'TIME' || startTok.kind === 'NUMBER') {
+      startSec = parseFloat(startTok.value); advance();
+    } else {
+      diagnostics.push({ level: 'error', code: 'ParseError', message: 'at: expected start time (e.g. 2s)' });
+    }
+
+    eat('DASH');
+
+    const endTok = peek();
+    let endSec = -1;
+    if (endTok.kind === 'TIME' || endTok.kind === 'NUMBER') {
+      endSec = parseFloat(endTok.value); advance();
+    }
+
+    eat('COLON');
+
+    const effects = parseEffectList();
+    return { kind: 'Segment', startSec, endSec, effects };
+  }
+
+  // every 5s : glitch(intensity: 0.4)
+  // every 5s for 1.5s : glitch()
+  function parsePeriodic(): PeriodicNode | null {
+    expect('KEYWORD', 'every');
+
+    const periodTok = peek();
+    let periodSec = 5;
+    if (periodTok.kind === 'TIME' || periodTok.kind === 'NUMBER') {
+      periodSec = parseFloat(periodTok.value); advance();
+    }
+
+    let durationSec = 1;
+    if (eat('KEYWORD', 'for')) {
+      const v = peek();
+      if (v.kind === 'TIME' || v.kind === 'NUMBER') { durationSec = parseFloat(v.value); advance(); }
+    }
+
+    eat('COLON');
+
+    const effects = parseEffectList();
+    return { kind: 'Periodic', periodSec, durationSec, effects };
+  }
+
+  // Comma-separated PrimArg list, terminated by next statement keyword or RBRACE
+  function parseEffectList(): PrimArgNode[] {
+    const effects: PrimArgNode[] = [];
+    const STOP_KW = new Set(['at', 'every', 'audio', 'clip', 'scene', 'goal', 'brand', 'dispatch', 'render']);
+
+    const hasBlock = eat('LBRACE');
+
+    while (true) {
+      const t = peek();
+      if (t.kind === 'EOF') break;
+      if (hasBlock && t.kind === 'RBRACE') { advance(); break; }
+      if (!hasBlock && t.kind === 'RBRACE') break;
+      if (!hasBlock && t.kind === 'KEYWORD' && STOP_KW.has(t.value)) break;
+      if (!hasBlock && t.kind === 'PIPE') break;
+
+      const prim = parsePrimArg();
+      if (prim) effects.push(prim);
+      eat('COMMA');
+    }
+
+    return effects;
   }
 
   function parseActsLike(): ActsLikeNode {
@@ -231,7 +344,8 @@ export function parse(tokens: Token[]): ParseResult {
     if (eat('LPAREN')) {
       while (peek().kind !== 'RPAREN' && peek().kind !== 'EOF') {
         const k = peek().value; advance();
-        eat('EQUALS');
+        // Accept both = and : as key-value separators
+        eat('EQUALS'); eat('COLON');
         const v = peek();
         if (v.kind === 'STRING') { params[k] = v.value; advance(); }
         else if (v.kind === 'NUMBER' || v.kind === 'TIME') { params[k] = parseFloat(v.value); advance(); }
@@ -277,7 +391,6 @@ export function parse(tokens: Token[]): ParseResult {
         const v = peek();
         if (v.kind === 'TIME' || v.kind === 'NUMBER') { maxDuration = parseFloat(v.value); advance(); }
       } else {
-        // skip unknown
         advance();
       }
     }
@@ -328,7 +441,6 @@ export function parse(tokens: Token[]): ParseResult {
         const fmt = peek().value; advance();
         eat('KEYWORD', 'do');
         const action = peek().value; advance();
-        // optional (target)
         let target = action;
         if (eat('LPAREN')) {
           target = peek().value; advance();
@@ -386,7 +498,7 @@ export function parse(tokens: Token[]): ParseResult {
   function parseApplyToSelection(): ApplyToSelectionNode {
     expect('KEYWORD', 'apply_to_selection');
     expect('LPAREN');
-    const effects: import('./types').PrimArgNode[] = [];
+    const effects: PrimArgNode[] = [];
 
     while (peek().kind !== 'RPAREN' && peek().kind !== 'EOF') {
       const prim = parsePrimArg();
@@ -434,7 +546,6 @@ export function parse(tokens: Token[]): ParseResult {
     expect('KEYWORD', 'shader');
     expect('LPAREN');
 
-    // Recognised aliases → canonical HF model IDs
     const MODEL_ALIASES: Record<string, import('./types').HFModel> = {
       'diffusion-as-shader': 'EXCAI/Diffusion-As-Shader',
       'diffusion_shader':    'EXCAI/Diffusion-As-Shader',
@@ -464,7 +575,6 @@ export function parse(tokens: Token[]): ParseResult {
             params[k] = val;
           }
         } else {
-          // bare identifier — treat as model shorthand
           const resolved = MODEL_ALIASES[k];
           if (resolved) model = resolved;
         }
@@ -480,7 +590,6 @@ export function parse(tokens: Token[]): ParseResult {
 
   // ---- entry -----------------------------------------------------------
 
-  // Skip leading whitespace / non-scene tokens
   while (peek().kind !== 'EOF' && !(peek().kind === 'KEYWORD' && peek().value === 'scene')) {
     advance();
   }

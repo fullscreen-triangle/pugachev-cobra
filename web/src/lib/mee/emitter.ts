@@ -7,8 +7,8 @@
 
 import {
   SceneNode, PipelineStep,
-  IRNode, IRClip, IRPrim, IRCompose, IRHole,
-  IRDetect, IRSelect, IRObjectEffect, IRShader,
+  IRNode, IRClip, IRAudio, IRPrim, IRCompose, IRHole,
+  IRDetect, IRSelect, IRObjectEffect, IRShader, IRSegment, IRPeriodic,
 } from './types';
 import { PrimitiveSpec, resolvePrimitive, deriveChain } from './registry';
 
@@ -22,14 +22,8 @@ export function buildIR(scene: SceneNode, resolvedPrimitives: PrimitiveSpec[]): 
     if (node) steps.push(node);
   }
 
-  // For acts_like steps: inject the derived chain in backward-completion
-  // order (§8 Principle backward). deriveChain() returns the primitives
-  // ordered so that each primitive is introduced after the primitives that
-  // most support it have already appeared — building spatial context first,
-  // then layering photometric and temporal effects.
   const hasActsLike = scene.pipeline.steps.some(s => s.kind === 'ActsLike');
   if (hasActsLike) {
-    // Exclude any primitives already explicitly placed by compose() steps
     const explicitNames = new Set(
       steps
         .filter(s => s.kind === 'IRCompose')
@@ -38,7 +32,6 @@ export function buildIR(scene: SceneNode, resolvedPrimitives: PrimitiveSpec[]): 
         .map(s => (s as IRPrim).primitive)
     );
     const unplaced = resolvedPrimitives.filter(p => !explicitNames.has(p.name));
-    // Apply backward chain derivation to determine execution order
     const ordered = deriveChain(unplaced);
     const primNodes: IRPrim[] = ordered.map(p => ({
       kind: 'IRPrim' as const,
@@ -63,9 +56,73 @@ function buildStep(step: PipelineStep, _resolved: PrimitiveSpec[]): IRNode | nul
         duration: step.for > 0 ? step.for : 30,
       } satisfies IRClip;
 
+    case 'Audio':
+      return {
+        kind: 'IRAudio',
+        path: step.path,
+        muteVideo: step.muteVideo,
+        startFrom: step.startFrom,
+        volume: step.volume,
+      } satisfies IRAudio;
+
+    case 'Segment': {
+      const effects: IRNode[] = step.effects.map(eff => {
+        const spec = resolvePrimitive(eff.name);
+        if (spec) {
+          return {
+            kind: 'IRPrim' as const,
+            primitive: spec.name,
+            namespace: spec.namespace,
+            params: { ...spec.defaultParams, ...eff.params },
+            power: spec.power,
+          };
+        }
+        // Unknown primitives (bw, boxes, text, glitch) emitted as tagged IRPrim
+        return {
+          kind: 'IRPrim' as const,
+          primitive: eff.name,
+          namespace: 'photometric' as const,
+          params: eff.params,
+          power: 0.3,
+        };
+      });
+      return {
+        kind: 'IRSegment',
+        startSec: step.startSec,
+        endSec: step.endSec,
+        effects,
+      } satisfies IRSegment;
+    }
+
+    case 'Periodic': {
+      const effects: IRNode[] = step.effects.map(eff => {
+        const spec = resolvePrimitive(eff.name);
+        if (spec) {
+          return {
+            kind: 'IRPrim' as const,
+            primitive: spec.name,
+            namespace: spec.namespace,
+            params: { ...spec.defaultParams, ...eff.params },
+            power: spec.power,
+          };
+        }
+        return {
+          kind: 'IRPrim' as const,
+          primitive: eff.name,
+          namespace: 'temporal' as const,
+          params: eff.params,
+          power: 0.3,
+        };
+      });
+      return {
+        kind: 'IRPeriodic',
+        periodSec: step.periodSec,
+        durationSec: step.durationSec,
+        effects,
+      } satisfies IRPeriodic;
+    }
+
     case 'ActsLike':
-      // Resolved primitives injected by buildIR; leave a hole here to be
-      // replaced — the checker already expanded them into resolvedPrimitives.
       return { kind: 'IRHole', description: step.description } satisfies IRHole;
 
     case 'Compose': {
@@ -98,20 +155,13 @@ function buildStep(step: PipelineStep, _resolved: PrimitiveSpec[]): IRNode | nul
     }
 
     case 'Render':
-      return null; // render directive handled by emitter metadata
+      return null;
 
     case 'Detect':
-      return {
-        kind: 'IRDetect',
-        targets: step.targets,
-        minConfidence: step.minConfidence,
-      } satisfies IRDetect;
+      return { kind: 'IRDetect', targets: step.targets, minConfidence: step.minConfidence } satisfies IRDetect;
 
     case 'Select':
-      return {
-        kind: 'IRSelect',
-        selector: step.selector,
-      } satisfies IRSelect;
+      return { kind: 'IRSelect', selector: step.selector } satisfies IRSelect;
 
     case 'ApplyToSelection': {
       const effects: IRObjectEffect[] = step.effects.map(eff => ({
@@ -119,13 +169,11 @@ function buildStep(step: PipelineStep, _resolved: PrimitiveSpec[]): IRNode | nul
         effect: eff.name,
         params: eff.params,
       }));
-      // Wrap multiple effects in a compose; single effect returned directly
       if (effects.length === 1) return effects[0];
       return { kind: 'IRCompose', steps: effects };
     }
 
     case 'ForEach': {
-      // Flatten for_each body into a compose of object effects
       const bodyNodes: IRNode[] = step.body
         .map(s => buildStep(s, _resolved))
         .filter((n): n is IRNode => n !== null);
@@ -133,13 +181,7 @@ function buildStep(step: PipelineStep, _resolved: PrimitiveSpec[]): IRNode | nul
     }
 
     case 'Shader':
-      // sourceClip is resolved in emitRemotion once the clip is known
-      return {
-        kind: 'IRShader',
-        model: step.model,
-        params: step.params,
-        sourceClip: '',
-      } satisfies IRShader;
+      return { kind: 'IRShader', model: step.model, params: step.params, sourceClip: '' } satisfies IRShader;
 
     default:
       return null;
@@ -150,7 +192,7 @@ function buildStep(step: PipelineStep, _resolved: PrimitiveSpec[]): IRNode | nul
 
 export interface EmitResult {
   composition: string;
-  worker: string | null; // non-null when the scene uses cameras (offscreen rendering)
+  worker: string | null;
 }
 
 export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResult {
@@ -160,6 +202,9 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
   const detectionNodes = collectDetect(ir);
   const selectNode = collectSelect(ir);
   const shaderNodes = collectShaders(ir);
+  const audioNodes = collectAudios(ir);
+  const segments = collectSegments(ir);
+  const periodics = collectPeriodics(ir);
 
   const lines: string[] = [];
 
@@ -168,7 +213,7 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
   lines.push(`// Scene: ${sceneName}`);
   lines.push(`// ============================================================`);
   lines.push(``);
-  // Separate camera primitives from visual/temporal/acoustic primitives
+
   const cameraPrims = allPrims.filter(p => getPrimitiveHint(p.primitive).startsWith('camera:'));
   const effectPrims = allPrims.filter(p => !getPrimitiveHint(p.primitive).startsWith('camera:'));
 
@@ -177,17 +222,21 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
   const videoPrims = effectPrims.filter(p => getPrimitiveHint(p.primitive).startsWith('video:'));
   const hasVideoEffects = videoPrims.length > 0;
   const hasShaders = shaderNodes.length > 0;
+  const hasAudio = audioNodes.length > 0;
+  const hasSegments = segments.length > 0;
+  const hasPeriodics = periodics.length > 0;
+
+  const muteVideo = audioNodes.some(a => a.muteVideo);
 
   lines.push(`import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Video, Audio, Sequence } from 'remotion';`);
+  lines.push(`import React from 'react';`);
   if (hasVideoEffects) {
     lines.push(`import { VideoEffectStack } from '@/effects/video/remotion/VideoEffectStack';`);
     lines.push(`import { getVideoEffect } from '@/effects/video/registry';`);
-    lines.push(`import React from 'react';`);
   }
   if (hasCameras) {
     lines.push(`import { Canvas } from '@react-three/offscreen';`);
     lines.push(`import { OrbitControls } from '@react-three/drei';`);
-    // Import the specific camera components needed
     const cameraImports = [...new Set(cameraPrims.map(p => emitCameraImport(p)))].filter(Boolean);
     for (const imp of cameraImports) lines.push(imp);
   }
@@ -198,24 +247,38 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
   if (hasShaders) {
     lines.push(`import { HFPrimitiveLayer } from '@/lib/hf/remotion/HFPrimitiveLayer';`);
   }
+  // Built-in effects used by segments/periodics
+  const builtinEffects = collectBuiltins([...segments, ...periodics]);
+  if (builtinEffects.has('bw')) {
+    lines.push(`// bw() — black-and-white filter via CSS`);
+  }
+  if (builtinEffects.has('text')) {
+    lines.push(`// text() — text overlay rendered inline`);
+  }
+  if (builtinEffects.has('glitch')) {
+    lines.push(`import { Glitch } from '@react-three/postprocessing';`);
+  }
+  if (builtinEffects.has('boxes')) {
+    lines.push(`// boxes() — detection bounding box overlay`);
+  }
   lines.push(``);
+
   if (hasCameras) {
-    lines.push(`// Worker created once at module scope to avoid re-creation on re-renders.`);
     lines.push(`const _worker = typeof window !== 'undefined'`);
     lines.push(`  ? new Worker(new URL('./${sceneName}.worker.tsx', import.meta.url), { type: 'module' })`);
     lines.push(`  : null;`);
     lines.push(``);
   }
+
   lines.push(`export const ${toCamelCase(sceneName)}: React.FC = () => {`);
   lines.push(`  const frame = useCurrentFrame();`);
   lines.push(`  const { fps, durationInFrames } = useVideoConfig();`);
-  lines.push(`  const t = frame / fps; // time in seconds`);
+  lines.push(`  const t = frame / fps; // seconds`);
   if (hasVideoEffects) {
     lines.push(`  const _videoRef = React.useRef<HTMLVideoElement>(null);`);
   }
   lines.push(``);
 
-  // Emit interpolations for each non-camera primitive
   for (const prim of effectPrims) {
     lines.push(...emitPrimitive(prim, fps));
   }
@@ -224,13 +287,23 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
   lines.push(`  return (`);
   lines.push(`    <AbsoluteFill style={{ backgroundColor: '#000' }}>`);
 
+  // Video layer
   if (clip) {
-    if (hasVideoEffects) {
-      lines.push(`      <Video src="${clip.path}" startFrom={${Math.round(clip.at * fps)}} ref={_videoRef} />`);
-    } else {
-      lines.push(`      <Video src="${clip.path}" startFrom={${Math.round(clip.at * fps)}} />`);
-    }
+    const attrs = [
+      `src="${clip.path}"`,
+      `startFrom={${Math.round(clip.at * fps)}}`,
+      muteVideo ? 'muted' : '',
+      hasVideoEffects ? 'ref={_videoRef}' : '',
+    ].filter(Boolean).join(' ');
+    lines.push(`      <Video ${attrs} />`);
   }
+
+  // Audio tracks
+  for (const audio of audioNodes) {
+    const startFromFrames = Math.round(audio.startFrom * fps);
+    lines.push(`      <Audio src="${audio.path}" startFrom={${startFromFrames}} volume={${audio.volume}} />`);
+  }
+
   if (hasVideoEffects) {
     lines.push(`      <VideoEffectStack`);
     lines.push(`        effects={[`);
@@ -245,8 +318,6 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
     lines.push(`      />`);
   }
 
-  // Emit HF shader layers — each IRShader becomes an HFPrimitiveLayer that
-  // calls the HF Inference API and swaps the video src when the result arrives.
   if (hasShaders) {
     const clipPath = clip?.path ?? '';
     const startFrom = clip ? Math.round(clip.at * fps) : 0;
@@ -260,8 +331,11 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
     }
   }
 
-  // Emit visual layer for each spatial/photometric (non-camera) primitive
-  const visualPrims = effectPrims.filter(p => p.namespace === 'spatial' || p.namespace === 'photometric');
+  // Global (non-segmented) visual effects
+  const visualPrims = effectPrims.filter(p =>
+    (p.namespace === 'spatial' || p.namespace === 'photometric') &&
+    !getPrimitiveHint(p.primitive).startsWith('video:')
+  );
   if (visualPrims.length > 0) {
     lines.push(`      <AbsoluteFill style={{`);
     for (const prim of visualPrims) {
@@ -270,12 +344,9 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
     lines.push(`      }} />`);
   }
 
-  // Emit R3F Canvas with camera primitives when present.
-  // Uses @react-three/offscreen Canvas so WebGL rendering runs on a Worker
-  // thread, keeping the main thread free for Remotion's video pipeline.
+  // Camera canvas
   if (hasCameras) {
     lines.push(`      <AbsoluteFill>`);
-    lines.push(`        {/* Worker is created once — module-scope so it survives re-renders */}`);
     lines.push(`        <Canvas`);
     lines.push(`          worker={_worker ?? undefined}`);
     lines.push(`          fallback={(`);
@@ -290,13 +361,13 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
     lines.push(`      </AbsoluteFill>`);
   }
 
+  // Detection overlay
   if (hasDetection) {
-    const detectors = detectionNodes.flatMap(d => d.targets);
-    const uniqueDetectors = [...new Set(detectors)];
+    const detectors = [...new Set(detectionNodes.flatMap(d => d.targets))];
     const selectorExpr = selectNode?.selector ?? 'all';
     lines.push(`      <ObjectDetection`);
-    lines.push(`        videoSrc={clip?.path ?? ''}`);
-    lines.push(`        detectors={[${uniqueDetectors.map(d => `'${d}'`).join(', ')}]}`);
+    lines.push(`        videoSrc="${clip?.path ?? ''}"`);
+    lines.push(`        detectors={[${detectors.map(d => `'${d}'`).join(', ')}]}`);
     lines.push(`        selector="${selectorExpr}"`);
     lines.push(`      >`);
     lines.push(`        {(instances) => (`);
@@ -305,6 +376,38 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
     lines.push(`          </>`);
     lines.push(`        )}`);
     lines.push(`      </ObjectDetection>`);
+  }
+
+  // ---- Time-ranged segments ----------------------------------------
+  for (const seg of segments) {
+    const fromFrame = Math.round(seg.startSec * fps);
+    const durationF = seg.endSec >= 0
+      ? Math.round((seg.endSec - seg.startSec) * fps)
+      : `durationInFrames - ${fromFrame}`;
+    lines.push(`      <Sequence from={${fromFrame}} durationInFrames={${durationF}}>`);
+    lines.push(`        <AbsoluteFill>`);
+    for (const eff of seg.effects) {
+      lines.push(...emitBuiltinEffect(eff as IRPrim, fps));
+    }
+    lines.push(`        </AbsoluteFill>`);
+    lines.push(`      </Sequence>`);
+  }
+
+  // ---- Periodic effects --------------------------------------------
+  for (const per of periodics) {
+    const periodFrames = Math.round(per.periodSec * fps);
+    const durFrames    = Math.round(per.durationSec * fps);
+    const count = clip ? Math.floor(clip.duration / per.periodSec) + 1 : 10;
+    lines.push(`      {/* every ${per.periodSec}s */}`);
+    lines.push(`      {Array.from({ length: ${count} }, (_, i) => (`);
+    lines.push(`        <Sequence key={i} from={i * ${periodFrames}} durationInFrames={${durFrames}}>`);
+    lines.push(`          <AbsoluteFill>`);
+    for (const eff of per.effects) {
+      lines.push(...emitBuiltinEffect(eff as IRPrim, fps, '            '));
+    }
+    lines.push(`          </AbsoluteFill>`);
+    lines.push(`        </Sequence>`);
+    lines.push(`      ))}`);
   }
 
   lines.push(`    </AbsoluteFill>`);
@@ -320,14 +423,10 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
   lines.push(`  id: '${sceneName}',`);
   lines.push(`};`);
 
-  // Generate a companion worker file when cameras are present.
-  // The worker imports the scene components and calls render() from
-  // @react-three/offscreen so that R3F runs on a dedicated thread.
   let workerCode: string | null = null;
   if (hasCameras) {
     const wlines: string[] = [];
     wlines.push(`// MEE — Generated offscreen worker for scene: ${sceneName}`);
-    wlines.push(`// Companion to ${sceneName}.tsx — runs R3F on a Worker thread.`);
     wlines.push(`import React from 'react';`);
     wlines.push(`import { render } from '@react-three/offscreen';`);
     wlines.push(`import { OrbitControls } from '@react-three/drei';`);
@@ -352,6 +451,76 @@ export function emitRemotion(ir: IRNode, sceneName: string, fps = 30): EmitResul
   return { composition: lines.join('\n'), worker: workerCode };
 }
 
+// ---- Built-in effect emitter (segment/periodic bodies) --------------
+
+function emitBuiltinEffect(prim: IRPrim, fps: number, indent = '            '): string[] {
+  const lines: string[] = [];
+  const name = prim.primitive;
+  const p = prim.params;
+
+  switch (name) {
+    case 'bw': {
+      lines.push(`${indent}<AbsoluteFill style={{ mixBlendMode: 'luminosity', backdropFilter: 'grayscale(1)', filter: 'grayscale(1)' }} />`);
+      break;
+    }
+    case 'text': {
+      const txt   = String(p.text ?? p.content ?? 'TEXT');
+      const color = String(p.color ?? '#ffffff');
+      const size  = Number(p.size ?? 96);
+      const style = String(p.style ?? 'fade');
+      lines.push(`${indent}{/* text: "${txt}" style: ${style} */}`);
+      lines.push(`${indent}<AbsoluteFill style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>`);
+      lines.push(`${indent}  <span style={{`);
+      lines.push(`${indent}    fontFamily: 'monospace',`);
+      lines.push(`${indent}    fontSize: ${size},`);
+      lines.push(`${indent}    color: '${color}',`);
+      lines.push(`${indent}    WebkitTextStroke: '2px ${color}',`);
+      lines.push(`${indent}    letterSpacing: '0.15em',`);
+      lines.push(`${indent}    textTransform: 'uppercase',`);
+      lines.push(`${indent}  }}>${txt}</span>`);
+      lines.push(`${indent}</AbsoluteFill>`);
+      break;
+    }
+    case 'boxes': {
+      lines.push(`${indent}{/* boxes() — bounding-box overlay; wire in ObjectDetection instances here */}`);
+      lines.push(`${indent}<AbsoluteFill style={{ border: '2px solid #00ff00', pointerEvents: 'none' }} />`);
+      break;
+    }
+    case 'glitch': {
+      const intensity = Number(p.intensity ?? 0.4);
+      lines.push(`${indent}{/* glitch intensity: ${intensity} — rendered as CSS animation */}`);
+      lines.push(`${indent}<AbsoluteFill style={{`);
+      lines.push(`${indent}  animation: 'mee-glitch 0.1s steps(1) infinite',`);
+      lines.push(`${indent}  filter: \`hue-rotate(\${Math.random() * 360}deg) saturate(3)\`,`);
+      lines.push(`${indent}}} />`);
+      break;
+    }
+    default: {
+      // Fall through to normal style-prop emission for registered prims
+      const hint = getPrimitiveHint(name);
+      if (hint) {
+        lines.push(...emitStyleProp(prim).map(l => indent + l.trim()));
+      } else {
+        lines.push(`${indent}{/* ${name}(${JSON.stringify(p)}) */}`);
+      }
+    }
+  }
+
+  return lines;
+}
+
+// ---- Helpers ---------------------------------------------------------
+
+function collectBuiltins(nodes: (IRSegment | IRPeriodic)[]): Set<string> {
+  const set = new Set<string>();
+  for (const n of nodes) {
+    for (const eff of n.effects) {
+      if (eff.kind === 'IRPrim') set.add(eff.primitive);
+    }
+  }
+  return set;
+}
+
 function emitPrimitive(prim: IRPrim, fps: number): string[] {
   const lines: string[] = [];
   const hint = getPrimitiveHint(prim.primitive);
@@ -361,14 +530,12 @@ function emitPrimitive(prim: IRPrim, fps: number): string[] {
     case 'interpolate:translateY': {
       const amp = (prim.params.amp as number) ?? 12;
       const freq = (prim.params.freq as number) ?? 0.8;
-      lines.push(`  // ${prim.primitive} — ${prim.namespace}`);
       lines.push(`  const ${varName} = Math.sin(t * ${freq} * Math.PI * 2) * ${amp};`);
       break;
     }
     case 'interpolate:translateX': {
       const amp = (prim.params.amp as number) ?? 8;
       const freq = (prim.params.freq as number) ?? 1.1;
-      lines.push(`  // ${prim.primitive} — ${prim.namespace}`);
       lines.push(`  const ${varName} = Math.sin(t * ${freq} * Math.PI * 2 + 0.5) * ${amp};`);
       break;
     }
@@ -377,32 +544,21 @@ function emitPrimitive(prim: IRPrim, fps: number): string[] {
     case 'interpolate:scaleX': {
       const tension = (prim.params.tension as number) ?? 0.6;
       const freq = (prim.params.freq as number) ?? 0.8;
-      lines.push(`  // ${prim.primitive} — ${prim.namespace}`);
       lines.push(`  const ${varName} = 1 + Math.sin(t * ${freq} * Math.PI * 2) * ${tension * 0.05};`);
       break;
     }
     case 'interpolate:opacity': {
       const freq2 = (prim.params.freq as number) ?? 2.0;
-      lines.push(`  // ${prim.primitive} — ${prim.namespace}`);
       lines.push(`  const ${varName} = 0.5 + 0.5 * Math.sin(t * ${freq2} * Math.PI * 2);`);
       break;
     }
     case 'interpolate:amplitudeDecay': {
       const decay = (prim.params.decay as number) ?? 0.3;
-      lines.push(`  // ${prim.primitive} — ${prim.namespace}`);
       lines.push(`  const ${varName} = Math.exp(-t * ${decay});`);
       break;
     }
-    default: {
-      if (hint.startsWith('video:')) {
-        const effectId = hint.replace('video:', '');
-        const ns = prim.namespace;
-        if (ns === 'temporal') {
-          lines.push(`  const ${varName} = frame / fps;`);
-        }
-      }
+    default:
       break;
-    }
   }
 
   return lines;
@@ -426,45 +582,29 @@ function emitStyleProp(prim: IRPrim): string[] {
     case 'interpolate:scaleX':
       lines.push(`        transform: \`scaleX(\${${varName}})\`,`);
       break;
-    case 'filter:displacement':
-    case 'filter:refractionMap': {
-      const depth = (prim.params.depth as number) ?? 0.3;
-      lines.push(`        filter: 'url(#mee-displacement-${prim.primitive})',`);
-      break;
-    }
     case 'filter:colorGrade': {
       const temp = (prim.params.temperature as number) ?? 0;
       const sat = (prim.params.saturation as number) ?? 1;
       const hueRot = Math.round(temp / 30);
-      lines.push(`        filter: \`hue-rotate(\${${hueRot}}deg) saturate(\${${sat}})\`,`);
+      lines.push(`        filter: \`hue-rotate(${hueRot}deg) saturate(${sat})\`,`);
       break;
     }
     case 'filter:saturation': {
       const amt = (prim.params.amount as number) ?? 0;
-      lines.push(`        filter: \`saturate(\${${amt}})\`,`);
+      lines.push(`        filter: \`saturate(${amt})\`,`);
       break;
     }
     case 'filter:motionBlur': {
       const amount = (prim.params.amount as number) ?? 4;
-      lines.push(`        filter: \`blur(\${${amount}}px)\`,`);
+      lines.push(`        filter: \`blur(${amount}px)\`,`);
       break;
     }
-    case 'layer:mirrorComposite':
-    case 'layer:causticsOverlay':
-      // These require separate React layer elements — emit as comment for now
-      lines.push(`        /* ${prim.primitive}: add a separate <AbsoluteFill> layer */`);
-      break;
     default:
-      if (hint.startsWith('video:')) {
-        // Video effects are composited via VideoEffectStack — no inline style needed
-      }
       break;
   }
 
   return lines;
 }
-
-// ---- Helpers ---------------------------------------------------------
 
 function findClip(ir: IRNode): { path: string; at: number; duration: number } | null {
   if (ir.kind === 'IRClip') return ir;
@@ -480,6 +620,7 @@ function findClip(ir: IRNode): { path: string; at: number; duration: number } | 
 function collectPrims(ir: IRNode): IRPrim[] {
   if (ir.kind === 'IRPrim') return [ir];
   if (ir.kind === 'IRCompose') return ir.steps.flatMap(collectPrims);
+  // Don't collect prims from inside segments/periodics — they're emitted separately
   return [];
 }
 
@@ -506,6 +647,24 @@ function collectSelect(ir: IRNode): IRSelect | null {
   return null;
 }
 
+function collectAudios(ir: IRNode): IRAudio[] {
+  if (ir.kind === 'IRAudio') return [ir];
+  if (ir.kind === 'IRCompose') return ir.steps.flatMap(collectAudios);
+  return [];
+}
+
+function collectSegments(ir: IRNode): IRSegment[] {
+  if (ir.kind === 'IRSegment') return [ir];
+  if (ir.kind === 'IRCompose') return ir.steps.flatMap(collectSegments);
+  return [];
+}
+
+function collectPeriodics(ir: IRNode): IRPeriodic[] {
+  if (ir.kind === 'IRPeriodic') return [ir];
+  if (ir.kind === 'IRCompose') return ir.steps.flatMap(collectPeriodics);
+  return [];
+}
+
 function getPrimitiveHint(name: string): string {
   const { PRIMITIVES } = require('./registry');
   return PRIMITIVES[name]?.remotionHint ?? '';
@@ -516,30 +675,20 @@ function toCamelCase(s: string): string {
     .replace(/^(.)/, c => c.toUpperCase());
 }
 
-// ---- Camera emitter helpers -----------------------------------------
-
-// Returns the import statement for the camera component needed by this prim.
 function emitCameraImport(prim: IRPrim): string {
   const hint = getPrimitiveHint(prim.primitive);
   switch (hint) {
-    case 'camera:perspective':
-      return `import { MEEPerspectiveCamera } from '@/lib/cameras';`;
-    case 'camera:orthographic':
-      return `import { MEEOrthographicCamera } from '@/lib/cameras';`;
-    case 'camera:shake':
-      return `import { MEECameraShake } from '@/lib/cameras';`;
-    case 'camera:transition':
-      return `import { MEECameraTransition } from '@/lib/cameras';`;
-    case 'camera:cube':
-      return `import { MEECubeCamera } from '@/lib/cameras';`;
+    case 'camera:perspective':   return `import { MEEPerspectiveCamera } from '@/lib/cameras';`;
+    case 'camera:orthographic':  return `import { MEEOrthographicCamera } from '@/lib/cameras';`;
+    case 'camera:shake':         return `import { MEECameraShake } from '@/lib/cameras';`;
+    case 'camera:transition':    return `import { MEECameraTransition } from '@/lib/cameras';`;
+    case 'camera:cube':          return `import { MEECubeCamera } from '@/lib/cameras';`;
     case 'camera:map':
       return `import { MEEOrthographicCamera } from '@/lib/cameras';\nimport { MapControls } from '@react-three/drei';`;
-    default:
-      return '';
+    default: return '';
   }
 }
 
-// Returns the JSX lines that instantiate a camera primitive inside a Canvas.
 function emitCameraJSX(prim: IRPrim): string[] {
   const hint = getPrimitiveHint(prim.primitive);
   const p = prim.params;
@@ -547,78 +696,23 @@ function emitCameraJSX(prim: IRPrim): string[] {
 
   switch (hint) {
     case 'camera:perspective': {
-      const fov       = p.fov ?? 50;
-      const near      = p.near ?? 0.1;
-      const far       = p.far ?? 1000;
-      const pos       = p.position ?? [0, 0, 5];
-      const track     = p.trackMouse ?? false;
-      const radius    = p.trackRadius ?? 5;
-      lines.push(
-        `          <MEEPerspectiveCamera fov={${fov}} near={${near}} far={${far}} ` +
-        `position={[${(pos as number[]).join(', ')}]} ` +
-        `trackMouse={${track}} trackRadius={${radius}} />`
-      );
+      const fov = p.fov ?? 50, near = p.near ?? 0.1, far = p.far ?? 1000;
+      const pos = p.position ?? [0, 0, 5];
+      lines.push(`<MEEPerspectiveCamera fov={${fov}} near={${near}} far={${far}} position={[${(pos as number[]).join(', ')}]} />`);
       break;
     }
     case 'camera:orthographic': {
-      const zoom = p.zoom ?? 50;
-      const near = p.near ?? 0.1;
-      const far  = p.far ?? 1000;
-      const pos  = p.position ?? [0, 0, 10];
-      lines.push(
-        `          <MEEOrthographicCamera zoom={${zoom}} near={${near}} far={${far}} ` +
-        `position={[${(pos as number[]).join(', ')}]} />`
-      );
+      const zoom = p.zoom ?? 50, near = p.near ?? 0.1, far = p.far ?? 1000;
+      const pos = p.position ?? [0, 0, 10];
+      lines.push(`<MEEOrthographicCamera zoom={${zoom}} near={${near}} far={${far}} position={[${(pos as number[]).join(', ')}]} />`);
       break;
     }
     case 'camera:shake': {
-      const intensity     = p.intensity ?? 0.5;
-      const decay         = p.decay ?? false;
-      const decayRate     = p.decayRate ?? 0.65;
-      const maxYaw        = p.maxYaw ?? 0.05;
-      const maxPitch      = p.maxPitch ?? 0.05;
-      const maxRoll       = p.maxRoll ?? 0.05;
-      const yawFreq       = p.yawFrequency ?? 0.8;
-      const pitchFreq     = p.pitchFrequency ?? 0.8;
-      const rollFreq      = p.rollFrequency ?? 0.8;
-      lines.push(
-        `          <MEECameraShake intensity={${intensity}} decay={${decay}} decayRate={${decayRate}} ` +
-        `maxYaw={${maxYaw}} maxPitch={${maxPitch}} maxRoll={${maxRoll}} ` +
-        `yawFrequency={${yawFreq}} pitchFrequency={${pitchFreq}} rollFrequency={${rollFreq}} />`
-      );
-      break;
-    }
-    case 'camera:transition': {
-      const initial  = p.initial ?? 'perspective';
-      const fov      = p.perspectiveFov ?? 50;
-      const zoom     = p.orthographicZoom ?? 100;
-      lines.push(
-        `          <MEECameraTransition initial="${initial}" perspectiveFov={${fov}} orthographicZoom={${zoom}} />`
-      );
-      break;
-    }
-    case 'camera:cube': {
-      const res    = p.resolution ?? 256;
-      const near   = p.near ?? 0.1;
-      const far    = p.far ?? 1000;
-      const frames = p.frames ?? 'Infinity';
-      lines.push(`          <MEECubeCamera resolution={${res}} near={${near}} far={${far}} frames={${frames}}>`);
-      lines.push(`            {(envTex) => null /* attach envTex to materials */}`);
-      lines.push(`          </MEECubeCamera>`);
-      break;
-    }
-    case 'camera:map': {
-      const pos  = p.position ?? [0, 5, 0];
-      const zoom = p.zoom ?? 1;
-      const far  = p.far ?? 10000;
-      lines.push(
-        `          <MEEOrthographicCamera position={[${(pos as number[]).join(', ')}]} zoom={${zoom}} far={${far}} />`
-      );
-      lines.push(`          <MapControls />`);
+      lines.push(`<MEECameraShake intensity={${p.intensity ?? 0.5}} decay={${p.decay ?? false}} />`);
       break;
     }
     default:
-      lines.push(`          {/* unknown camera primitive: ${prim.primitive} */}`);
+      lines.push(`{/* unknown camera primitive: ${prim.primitive} */}`);
   }
 
   return lines;

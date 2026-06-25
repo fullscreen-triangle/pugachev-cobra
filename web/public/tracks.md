@@ -1,6 +1,6 @@
 
 
-python -m yt_dlp -x --audio-format mp3 --audio-quality 0 -o "C:\Users\kunda\Documents\portfolio\pugachev-cobra\web\public\audio\%(title)s.%(ext)s" "https://www.youtube.com/watch?v=3tRB0NOyXUw"
+python -m yt_dlp -x --audio-format mp3 --audio-quality 0 -o "https://www.youtube.com/watch?v=fYB2BOHv7Oc"
 
 
 python -m yt_dlp -x --audio-format mp3 --audio-quality 0 -o "C:\Users\kunda\Documents\portfolio\pugachev-cobra\web\public\audio\%(title)s.%(ext)s" "https://www.youtube.com/watch?v=AbDKDEeXdT8"

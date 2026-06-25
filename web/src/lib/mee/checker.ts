@@ -33,7 +33,10 @@ export function check(scene: SceneNode): CheckResult {
       step.kind === 'Select' ||
       step.kind === 'ApplyToSelection' ||
       step.kind === 'ForEach' ||
-      step.kind === 'Shader'
+      step.kind === 'Shader' ||
+      step.kind === 'Audio' ||
+      step.kind === 'Segment' ||
+      step.kind === 'Periodic'
     ) {
       // Shader primitives are resolved at runtime via HF API; the checker
       // accepts them unconditionally and patches in their power contribution

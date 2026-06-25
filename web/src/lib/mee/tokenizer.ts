@@ -54,6 +54,7 @@ export function tokenize(src: string): Token[] {
       '(': 'LPAREN', ')': 'RPAREN',
       ',': 'COMMA', ':': 'COLON',
       '=': 'EQUALS', '>': 'GT', '<': 'LT',
+      '-': 'DASH',
     };
     if (ch in single) {
       advance();
