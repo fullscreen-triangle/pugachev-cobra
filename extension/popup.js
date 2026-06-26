@@ -131,6 +131,67 @@ omegaInput.addEventListener("change", (e) => {
 });
 omegaSlider.addEventListener("change", saveState);
 
+// ── Drift controls ────────────────────────────────────────────────────────────
+
+const toggleDrift = document.getElementById("toggle-drift");
+const driftSlider = document.getElementById("drift-slider");
+const driftInput = document.getElementById("drift-input");
+const driftBody = document.getElementById("drift-body");
+const driftStatus = document.getElementById("drift-status");
+
+let driftState = { enabled: false, drift: 0.6 };
+
+async function loadDriftState() {
+  driftState = await chrome.runtime.sendMessage({ type: "GET_DRIFT_STATE" });
+  renderDrift();
+}
+
+async function saveDriftState() {
+  await chrome.runtime.sendMessage({
+    type: "SET_DRIFT_STATE",
+    payload: driftState,
+  });
+}
+
+function renderDrift() {
+  toggleDrift.checked = driftState.enabled;
+  driftSlider.value = driftState.drift;
+  driftInput.value = driftState.drift;
+
+  if (driftState.enabled) {
+    driftStatus.textContent = `active — drift ${driftState.drift.toFixed(
+      2
+    )} — applied to all video`;
+    driftStatus.className = "drift-status active";
+  } else {
+    driftStatus.textContent = "off — enable to apply to all video";
+    driftStatus.className = "drift-status";
+  }
+}
+
+toggleDrift.addEventListener("change", async () => {
+  driftState.enabled = toggleDrift.checked;
+  await saveDriftState();
+  renderDrift();
+});
+
+function syncDrift(value) {
+  const v = Math.max(0, Math.min(1, parseFloat(value) || 0));
+  const rounded = Math.round(v * 20) / 20; // snap to 0.05 steps
+  driftState.drift = rounded;
+  driftSlider.value = rounded;
+  driftInput.value = rounded;
+  renderDrift();
+}
+
+driftSlider.addEventListener("input", (e) => syncDrift(e.target.value));
+driftSlider.addEventListener("change", saveDriftState);
+driftInput.addEventListener("change", (e) => {
+  syncDrift(e.target.value);
+  saveDriftState();
+});
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
 
 loadState();
+loadDriftState();

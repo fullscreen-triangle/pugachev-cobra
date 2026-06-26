@@ -5,6 +5,11 @@
  * No network requests here; all manipulation happens in content.js.
  */
 
+const DEFAULT_DRIFT_STATE = {
+  enabled: false,
+  drift: 0.6,
+};
+
 const DEFAULT_STATE = {
   enabled: true,
   rate: 7500, // compression rate (playback speed multiplier)
@@ -17,9 +22,12 @@ const DEFAULT_STATE = {
 
 // Persist state in sync storage so it survives browser restarts.
 chrome.runtime.onInstalled.addListener(async () => {
-  const existing = await chrome.storage.sync.get("zds_state");
+  const existing = await chrome.storage.sync.get(["zds_state", "drift_state"]);
   if (!existing.zds_state) {
     await chrome.storage.sync.set({ zds_state: DEFAULT_STATE });
+  }
+  if (!existing.drift_state) {
+    await chrome.storage.sync.set({ drift_state: DEFAULT_DRIFT_STATE });
   }
 });
 
@@ -43,6 +51,31 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
               payload: msg.payload,
             })
             .catch(() => {}); // tab may not have content script yet
+        });
+      });
+    });
+    return true;
+  }
+
+  if (msg.type === "GET_DRIFT_STATE") {
+    chrome.storage.sync.get("drift_state").then((r) => {
+      sendResponse(r.drift_state ?? DEFAULT_DRIFT_STATE);
+    });
+    return true;
+  }
+
+  if (msg.type === "SET_DRIFT_STATE") {
+    chrome.storage.sync.set({ drift_state: msg.payload }).then(() => {
+      sendResponse({ ok: true });
+      // Notify all tabs with the drift content script.
+      chrome.tabs.query({}, (tabs) => {
+        tabs.forEach((tab) => {
+          chrome.tabs
+            .sendMessage(tab.id, {
+              type: "DRIFT_STATE_UPDATED",
+              payload: msg.payload,
+            })
+            .catch(() => {});
         });
       });
     });

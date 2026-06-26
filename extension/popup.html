@@ -67,6 +67,29 @@
     </div>
   </section>
 
+  <section class="drift-section">
+    <div class="drift-header">
+      <div class="drift-label-block">
+        <span class="drift-name">Interstitial Drift</span>
+        <span class="drift-sub">display normaliser — cinema &amp; desktop</span>
+      </div>
+      <label class="toggle-wrap" title="Enable / disable drift">
+        <input type="checkbox" id="toggle-drift" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="drift-body" id="drift-body">
+      <div class="control-row">
+        <label for="drift-input">Drift <em>d</em></label>
+        <div class="input-group">
+          <input type="range" id="drift-slider" min="0" max="1" step="0.05" value="0.6" />
+          <input type="number" id="drift-input" min="0" max="1" step="0.05" value="0.6" />
+        </div>
+      </div>
+      <div class="drift-status" id="drift-status">off — enable to apply to all video</div>
+    </div>
+  </section>
+
   <footer>
     <span>Sachikonye · TU Munich · 2026</span>
   </footer>

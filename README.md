@@ -73,6 +73,56 @@ src/advalidation/    Python validation suite for the advertising theory paper
 web/                 Next.js playground (template + playground implementation)
 ```
 
+## Signature effect: Interstitial Drift
+
+The library ships one effect that is not a grading preset and not a degradation
+filter: `chromatic.interstitialDrift`. It encodes content for a colour pipeline
+that does not exist.
+
+Consumer displays converge on two colour management philosophies. Apple's path
+applies ICC profile correction, EDR tone-mapping, and a Display P3 gamut that
+is roughly 35% wider than sRGB in the green/cyan region. Microsoft's path
+applies no mandatory gamut transform, passes content through at the sRGB clamp,
+and leaves highlight roll-off to the application. The two pipelines handle the
+same encoded frame differently — most visibly in saturated greens, highlight
+shoulders, and neutral white balance.
+
+Interstitial Drift targets the gap between them. It applies three coupled
+transforms parameterised by a single `drift` value in [0, 1]:
+
+**Gamut push.** Green and cyan channel values are nudged toward P3-adjacent
+primaries. On an sRGB display the pushed values are clipped, reading as
+slightly desaturated. On a P3-managed display they are delivered in full,
+reading as fractionally over-saturated. Neither reading is wrong; neither is
+the encoded intent.
+
+**Highlight roll-off.** A log shoulder is applied between gamma 2.2 and a
+PQ-adjacent curve. The knee sits above the midtones, in the region where the
+two pipelines diverge most in their interpretation of encoded luminance. Apple's
+tone-mapping opens the shoulder; Windows' pass-through compresses it. The same
+highlight reads differently on each.
+
+**White point drift.** The neutral axis is shifted from D65 (~6504 K) toward
+~6000 K. Apple's colorsync corrects toward D65, so the shifted content reads
+cooler than encoded. Windows passes the shift through, so it reads warmer. The
+same frame cannot have the same white balance on both.
+
+The result is content with a resting cut that no available decoder graph fully
+resolves — receiver-relative meaning with no privileged receiver. At `drift=0`
+the effect is a no-op. At `drift=0.6` (the default) the characteristic look
+is present but not legible as a technical artefact. At `drift=1.0` the
+displacement is maximal: correct nowhere, broken nowhere, recognisable as a
+deliberate position.
+
+In the compositions in this repository the effect is applied only at the single
+colour moment of each scene — the cobra peak in *Leave Before You Arrive*, the
+keyhole light in *Be The One We Need* — so the B&W acts are untouched and the
+drift surfaces only where colour exists to carry it.
+
+The effect is implemented in `web/src/effects/video/chromatic/interstitialDrift.ts`
+with both a CPU `transform(ImageData)` path and a GLSL shader string for
+GPU-accelerated rendering.
+
 ## Companion paper
 
 The theoretical basis is documented in
