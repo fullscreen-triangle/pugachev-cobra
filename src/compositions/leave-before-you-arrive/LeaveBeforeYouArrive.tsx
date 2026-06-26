@@ -13,6 +13,8 @@ import {
   Sequence,
 } from 'remotion';
 import React from 'react';
+import { VideoEffectStack } from '@/effects/video/remotion/VideoEffectStack';
+import { getVideoEffect } from '@/effects/video/registry';
 
 // ---- Text overlay ----------------------------------------------------
 
@@ -111,8 +113,16 @@ const BWOverlay: React.FC = () => (
 //   Act III cobra.mp4     frames 510–750  (17s–25s)
 //   Act IV  black         frames 750–900  (25s–30s)
 
+// InterstitialDrift effect spec — the signature of the tool.
+// Applied only to the cobra act (17s–25s) where colour returns.
+// drift=0.6 is the characteristic look; tune per clip.
+const DRIFT_EFFECT = [
+  { effect: getVideoEffect('chromatic.interstitialDrift')!, params: { drift: 0.6 } },
+];
+
 export const LeaveBeforeYouArrive: React.FC = () => {
   const { fps } = useVideoConfig();
+  const cobraVideoRef = React.useRef<HTMLVideoElement>(null);
 
   const s = (sec: number) => Math.round(sec * fps);
 
@@ -153,9 +163,16 @@ export const LeaveBeforeYouArrive: React.FC = () => {
       </Sequence>
 
       {/* ---- ACT III: COBRA (17–25s) -------------------------------- */}
-      {/* Color returns here — the visual grammar breaks */}
+      {/* Colour returns here — but through the interstitial drift.    */}
+      {/* Neither sRGB nor P3 renders it correctly. That is the point. */}
       <Sequence from={s(17)} durationInFrames={s(8)}>
-        <Video src="assets/leave-before-you-arrive/cobra.mp4" startFrom={0} />
+        <Video src="assets/leave-before-you-arrive/cobra.mp4" startFrom={0} ref={cobraVideoRef} />
+        <VideoEffectStack
+          effects={DRIFT_EFFECT}
+          videoRef={cobraVideoRef}
+          width={1920}
+          height={1080}
+        />
       </Sequence>
 
       {/* Glitch on cobra nose-peak: ~19s–20s */}

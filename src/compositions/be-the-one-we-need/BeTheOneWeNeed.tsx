@@ -13,6 +13,8 @@ import {
   Sequence,
 } from 'remotion';
 import React from 'react';
+import { VideoEffectStack } from '@/effects/video/remotion/VideoEffectStack';
+import { getVideoEffect } from '@/effects/video/registry';
 
 // ---- Shared primitives -----------------------------------------------
 
@@ -100,6 +102,12 @@ const Clip: React.FC<ClipProps> = ({ src, startFrom = 0 }) => (
   <Video src={src} startFrom={startFrom} />
 );
 
+// InterstitialDrift — the signature effect. Applied only to the light clip
+// (the single colour moment). At drift=0.5 it's subtle on the keyhole beam.
+const DRIFT_EFFECT = [
+  { effect: getVideoEffect('chromatic.interstitialDrift')!, params: { drift: 0.5 } },
+];
+
 // ---- Main composition ---------------------------------------------------
 //
 // Timeline (30fps):
@@ -122,6 +130,7 @@ const Clip: React.FC<ClipProps> = ({ src, startFrom = 0 }) => (
 export const BeTheOneWeNeed: React.FC = () => {
   const { fps } = useVideoConfig();
   const s = (sec: number) => Math.round(sec * fps);
+  const lightVideoRef = React.useRef<HTMLVideoElement>(null);
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#000' }}>
@@ -210,10 +219,17 @@ export const BeTheOneWeNeed: React.FC = () => {
         <OverlayText text="no soul should be misunderstood" fontSize={52} />
       </Sequence>
 
-      {/* light — full colour, the only colour moment */}
+      {/* light — full colour, the only colour moment.             */}
+      {/* InterstitialDrift applied: colour returns, but through   */}
+      {/* a pipeline that belongs to no display. The signature.    */}
       <Sequence from={s(25)} durationInFrames={s(3)}>
-        <Clip src="assets/be-the-one-we-need/light.mp4" />
-        {/* No colour overlay — full colour is the break */}
+        <Video src="assets/be-the-one-we-need/light.mp4" startFrom={0} ref={lightVideoRef} />
+        <VideoEffectStack
+          effects={DRIFT_EFFECT}
+          videoRef={lightVideoRef}
+          width={1920}
+          height={1080}
+        />
       </Sequence>
       <Sequence from={s(25.5)} durationInFrames={s(2)}>
         <OverlayText text="be the one we need" fontSize={72} fadeFrames={8} />

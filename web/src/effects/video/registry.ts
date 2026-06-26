@@ -4,8 +4,9 @@ import { VIDEO_BEHAVIORS } from './behaviors';
 import { blackAndWhite }     from './chromatic/blackAndWhite';
 import { invertColors }      from './chromatic/invertColors';
 import { posterize }         from './chromatic/posterize';
-import { duotone }           from './chromatic/duotone';
-import { silhouetteReplace } from './chromatic/silhouetteReplace';
+import { duotone }             from './chromatic/duotone';
+import { silhouetteReplace }   from './chromatic/silhouetteReplace';
+import { interstitialDrift }   from './chromatic/interstitialDrift';
 import { fabricWeave }       from './material/fabricWeave';
 import { paperTexture }      from './material/paperTexture';
 import { halftoneScreen }    from './material/halftoneScreen';
@@ -21,7 +22,8 @@ export const VIDEO_EFFECT_REGISTRY: Record<string, VideoEffect> = {
   'chromatic.invert':       invertColors,
   'chromatic.posterize':    posterize,
   'chromatic.duotone':      duotone,
-  'chromatic.silhouette':   silhouetteReplace,
+  'chromatic.silhouette':         silhouetteReplace,
+  'chromatic.interstitialDrift':  interstitialDrift,
   'material.fabric':        fabricWeave,
   'material.paper':         paperTexture,
   'material.screen':        halftoneScreen,
