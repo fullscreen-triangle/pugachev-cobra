@@ -11,6 +11,7 @@ import {
   interpolate,
   Video,
   Sequence,
+  staticFile,
 } from 'remotion';
 import React from 'react';
 import { VideoEffectStack } from '@/effects/video/remotion/VideoEffectStack';
@@ -139,7 +140,7 @@ export const BeTheOneWeNeed: React.FC = () => {
 
       {/* mirror — "are you what you are?" */}
       <Sequence from={s(0)} durationInFrames={s(3)}>
-        <Clip src="assets/be-the-one-we-need/mirror.mp4" />
+        <Clip src={staticFile('be-the-one-we-need/mirror.mp4')} />
         <BWOverlay />
       </Sequence>
       <Sequence from={s(0.3)} durationInFrames={s(2.4)}>
@@ -148,7 +149,7 @@ export const BeTheOneWeNeed: React.FC = () => {
 
       {/* shadow — "are you represented by what you are?" */}
       <Sequence from={s(3)} durationInFrames={s(3)}>
-        <Clip src="assets/be-the-one-we-need/shadow.mp4" />
+        <Clip src={staticFile('be-the-one-we-need/shadow.mp4')} />
         <BWOverlay />
       </Sequence>
       <Sequence from={s(3.3)} durationInFrames={s(2.4)}>
@@ -157,7 +158,7 @@ export const BeTheOneWeNeed: React.FC = () => {
 
       {/* crowd — "are you what you understand you are?" */}
       <Sequence from={s(6)} durationInFrames={s(3)}>
-        <Clip src="assets/be-the-one-we-need/crowd.mp4" />
+        <Clip src={staticFile('be-the-one-we-need/crowd.mp4')} />
         <BWOverlay />
       </Sequence>
       <Sequence from={s(6.3)} durationInFrames={s(2.4)}>
@@ -168,7 +169,7 @@ export const BeTheOneWeNeed: React.FC = () => {
       {/* hands reaching but not touching — no text */}
 
       <Sequence from={s(9)} durationInFrames={s(3)}>
-        <Clip src="assets/be-the-one-we-need/hands.mp4" />
+        <Clip src={staticFile('be-the-one-we-need/hands.mp4')} />
         <BWOverlay />
       </Sequence>
 
@@ -177,7 +178,7 @@ export const BeTheOneWeNeed: React.FC = () => {
 
       {/* static — "others can only understand" */}
       <Sequence from={s(12)} durationInFrames={s(3)}>
-        <Clip src="assets/be-the-one-we-need/static.mp4" />
+        <Clip src={staticFile('be-the-one-we-need/static.mp4')} />
         <BWOverlay />
       </Sequence>
       <Sequence from={s(12.2)} durationInFrames={s(2.6)}>
@@ -186,7 +187,7 @@ export const BeTheOneWeNeed: React.FC = () => {
 
       {/* archive — "what you understand" */}
       <Sequence from={s(15)} durationInFrames={s(3)}>
-        <Clip src="assets/be-the-one-we-need/archive.mp4" />
+        <Clip src={staticFile('be-the-one-we-need/archive.mp4')} />
         <BWOverlay />
       </Sequence>
       <Sequence from={s(15.2)} durationInFrames={s(2.6)}>
@@ -198,13 +199,13 @@ export const BeTheOneWeNeed: React.FC = () => {
 
       {/* lip — silent, desaturated (not fully B&W) */}
       <Sequence from={s(18)} durationInFrames={s(2)}>
-        <Clip src="assets/be-the-one-we-need/lip.mp4" />
+        <Clip src={staticFile('be-the-one-we-need/lip.mp4')} />
         <DesatOverlay amount={0.7} />
       </Sequence>
 
       {/* ocean — depth invisible, desaturated */}
       <Sequence from={s(20)} durationInFrames={s(2)}>
-        <Clip src="assets/be-the-one-we-need/ocean.mp4" />
+        <Clip src={staticFile('be-the-one-we-need/ocean.mp4')} />
         <DesatOverlay amount={0.5} />
       </Sequence>
 
@@ -212,7 +213,7 @@ export const BeTheOneWeNeed: React.FC = () => {
 
       {/* babel — B&W diagnosis */}
       <Sequence from={s(22)} durationInFrames={s(3)}>
-        <Clip src="assets/be-the-one-we-need/babel.mp4" />
+        <Clip src={staticFile('be-the-one-we-need/babel.mp4')} />
         <BWOverlay />
       </Sequence>
       <Sequence from={s(22.2)} durationInFrames={s(2.6)}>
@@ -223,7 +224,7 @@ export const BeTheOneWeNeed: React.FC = () => {
       {/* InterstitialDrift applied: colour returns, but through   */}
       {/* a pipeline that belongs to no display. The signature.    */}
       <Sequence from={s(25)} durationInFrames={s(3)}>
-        <Video src="assets/be-the-one-we-need/light.mp4" startFrom={0} ref={lightVideoRef} />
+        <Video src={staticFile('be-the-one-we-need/light.mp4')} startFrom={0} ref={lightVideoRef} />
         <VideoEffectStack
           effects={DRIFT_EFFECT}
           videoRef={lightVideoRef}

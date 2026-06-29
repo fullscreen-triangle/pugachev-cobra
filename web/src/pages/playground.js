@@ -11,6 +11,12 @@ const MotionTrail = dynamic(() => import("@/components/MotionTrail"), {
   ssr: false,
 });
 
+// @remotion/player — loaded client-side only (it needs the DOM)
+const RemotionPlayer = dynamic(
+  () => import("@remotion/player").then((m) => ({ default: m.Player })),
+  { ssr: false }
+);
+
 // ---- DSL examples ----------------------------------------------------
 
 const DEFAULT_SOURCE = `scene water_reveal {
@@ -574,13 +580,122 @@ function Timeline({
   );
 }
 
+// ---- Remotion composition preview ------------------------------------
+// Loaded lazily so GenericComposition (which imports from 'remotion')
+// only runs on the client.
+
+const GenericCompositionModule = dynamic(
+  () => import("@/lib/mee/GenericComposition"),
+  { ssr: false }
+);
+
+function CompositionPreview({ ir, compositionId, onRender }) {
+  const [mod, setMod] = useState(null);
+  const [rendering, setRendering] = useState(false);
+  const [renderResult, setRenderResult] = useState(null);
+
+  useEffect(() => {
+    import("@/lib/mee/GenericComposition").then(setMod);
+  }, []);
+
+  if (!mod || !ir) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-dark/30 dark:text-light/30 text-xs font-mono">
+        {!ir ? "compile a scene to preview" : "loading player…"}
+      </div>
+    );
+  }
+
+  const { GenericComposition, irToConfig } = mod;
+  const cfg = irToConfig(ir);
+
+  const handleRender = async () => {
+    if (!compositionId) return;
+    setRendering(true);
+    setRenderResult(null);
+    try {
+      const res = await fetch("/api/render", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ compositionId }),
+      });
+      const data = await res.json();
+      setRenderResult(data);
+    } catch (e) {
+      setRenderResult({ error: String(e) });
+    } finally {
+      setRendering(false);
+    }
+  };
+
+  return (
+    <div className="flex-1 flex flex-col min-h-0">
+      {/* Player */}
+      <div className="flex-1 min-h-0 bg-black flex items-center justify-center overflow-hidden">
+        <RemotionPlayer
+          component={GenericComposition}
+          inputProps={{ ir, mediaBase: "/api/media-file?path" }}
+          durationInFrames={cfg.durationInFrames}
+          fps={cfg.fps}
+          compositionWidth={cfg.width}
+          compositionHeight={cfg.height}
+          style={{ width: "100%", height: "100%" }}
+          controls
+          loop
+        />
+      </div>
+
+      {/* Render bar */}
+      <div className="flex-shrink-0 flex items-center gap-3 px-3 py-2 border-t border-dark/10 dark:border-light/10">
+        <button
+          onClick={handleRender}
+          disabled={rendering || !compositionId}
+          className={`text-xs px-3 py-1 rounded font-mono transition-colors
+            ${
+              rendering || !compositionId
+                ? "bg-dark/10 dark:bg-light/10 text-dark/30 dark:text-light/30 cursor-not-allowed"
+                : "bg-primary dark:bg-primaryDark text-light hover:opacity-90"
+            }`}
+        >
+          {rendering ? "rendering…" : "render mp4"}
+        </button>
+        <span className="text-xs font-mono text-dark/40 dark:text-light/40">
+          {cfg.durationInFrames}f · {cfg.fps}fps ·{" "}
+          {Math.round(cfg.durationInFrames / cfg.fps)}s
+        </span>
+        {renderResult?.ok && (
+          <span className="text-xs font-mono text-green-500 truncate">
+            ✓ {renderResult.path}
+          </span>
+        )}
+        {renderResult?.error && (
+          <span className="text-xs font-mono text-red-500 truncate">
+            ✗ {renderResult.error}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ---- Preview panel ---------------------------------------------------
 
-function PreviewPanel({ file, previewMode, setPreviewMode }) {
+function PreviewPanel({
+  file,
+  previewMode,
+  setPreviewMode,
+  ir,
+  compositionId,
+}) {
+  // If we have a compiled IR, always show the composition player
+  if (ir) {
+    return <CompositionPreview ir={ir} compositionId={compositionId} />;
+  }
+
   if (!file) {
     return (
       <div className="flex-1 flex items-center justify-center text-dark/30 dark:text-light/30 text-xs font-mono">
-        select a file to preview
+        select a file or compile a scene
       </div>
     );
   }
@@ -701,27 +816,94 @@ export default function Playground() {
     return () => clearTimeout(id);
   }, [source, compiler, runCompile]);
 
+  // ---- Timeline → MEE source sync ------------------------------------
+  // When timeline items change, regenerate the MEE scene source so the
+  // compiler re-runs and the Player reflects the timeline arrangement.
+  // Only kicks in when there are actual video clips — preserves manually
+  // typed source when the timeline is empty.
+
+  const [timelineDriven, setTimelineDriven] = useState(false);
+
+  function timelineToMEE(items) {
+    const videoItems = items
+      .filter((it) => it.type === "video")
+      .sort((a, b) => a.startSec - b.startSec);
+    const audioItems = items.filter((it) => it.type === "audio");
+
+    if (videoItems.length === 0) return null;
+
+    const lines = ["scene timeline {"];
+
+    for (const v of videoItems) {
+      // Derive a clean path relative to the assets root from the URL
+      const clipPath = v.url.includes("path=")
+        ? decodeURIComponent(v.url.split("path=")[1])
+        : v.url;
+      lines.push(
+        `  clip("${clipPath}", at=${v.startSec.toFixed(
+          1
+        )}s, for=${v.durationSec.toFixed(1)}s)`
+      );
+    }
+
+    for (const a of audioItems) {
+      const audioPath = a.url.includes("path=")
+        ? decodeURIComponent(a.url.split("path=")[1])
+        : a.url;
+      lines.push(`  audio("${audioPath}")`);
+    }
+
+    lines.push("}");
+    return lines.join("\n");
+  }
+
   // Timeline actions
-  const addItem = useCallback((file, startSec = 0) => {
-    setTimelineItems((prev) => [...prev, makeItem(file, startSec)]);
+  const syncTimeline = useCallback((updater) => {
+    setTimelineItems((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      const mee = timelineToMEE(next);
+      if (mee) {
+        setTimelineDriven(true);
+        setSource(mee);
+        // Ensure compiler is loaded
+        import("../lib/mee/index").then((mod) => setCompiler(mod));
+      }
+      return next;
+    });
   }, []);
 
-  const moveItem = useCallback((id, startSec) => {
-    setTimelineItems((prev) =>
-      prev.map((it) => (it.id === id ? { ...it, startSec } : it))
-    );
-  }, []);
+  const addItem = useCallback(
+    (file, startSec = 0) => {
+      syncTimeline((prev) => [...prev, makeItem(file, startSec)]);
+    },
+    [syncTimeline]
+  );
 
-  const resizeItem = useCallback((id, durationSec) => {
-    setTimelineItems((prev) =>
-      prev.map((it) => (it.id === id ? { ...it, durationSec } : it))
-    );
-  }, []);
+  const moveItem = useCallback(
+    (id, startSec) => {
+      syncTimeline((prev) =>
+        prev.map((it) => (it.id === id ? { ...it, startSec } : it))
+      );
+    },
+    [syncTimeline]
+  );
 
-  const removeItem = useCallback((id) => {
-    setTimelineItems((prev) => prev.filter((it) => it.id !== id));
-    setSelectedItem((prev) => (prev?.id === id ? null : prev));
-  }, []);
+  const resizeItem = useCallback(
+    (id, durationSec) => {
+      syncTimeline((prev) =>
+        prev.map((it) => (it.id === id ? { ...it, durationSec } : it))
+      );
+    },
+    [syncTimeline]
+  );
+
+  const removeItem = useCallback(
+    (id) => {
+      syncTimeline((prev) => prev.filter((it) => it.id !== id));
+      setSelectedItem((prev) => (prev?.id === id ? null : prev));
+    },
+    [syncTimeline]
+  );
 
   const selectItem = useCallback((item) => {
     setSelectedItem(item);
@@ -904,6 +1086,8 @@ export default function Playground() {
                 file={previewFile}
                 previewMode={previewMode}
                 setPreviewMode={setPreviewMode}
+                ir={result?.ok ? result.ir : null}
+                compositionId={result?.scene?.name ?? null}
               />
             )}
             {rightTab === "diagnostics" && (

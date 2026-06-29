@@ -11,6 +11,7 @@ import {
   interpolate,
   Video,
   Sequence,
+  staticFile,
 } from 'remotion';
 import React from 'react';
 import { VideoEffectStack } from '@/effects/video/remotion/VideoEffectStack';
@@ -131,7 +132,7 @@ export const LeaveBeforeYouArrive: React.FC = () => {
 
       {/* ---- ACT I: PARKOUR (0–8s) --------------------------------- */}
       <Sequence from={s(0)} durationInFrames={s(8)}>
-        <Video src="assets/leave-before-you-arrive/parkour.mp4" startFrom={0} />
+        <Video src={staticFile('leave-before-you-arrive/parkour.mp4')} startFrom={0} />
         <BWOverlay />
       </Sequence>
 
@@ -144,7 +145,7 @@ export const LeaveBeforeYouArrive: React.FC = () => {
 
       {/* ---- ACT II: LONG JUMP (8–17s) ----------------------------- */}
       <Sequence from={s(8)} durationInFrames={s(9)}>
-        <Video src="assets/leave-before-you-arrive/longjump.mp4" startFrom={0} />
+        <Video src={staticFile('leave-before-you-arrive/longjump.mp4')} startFrom={0} />
         <BWOverlay />
       </Sequence>
 
@@ -166,7 +167,7 @@ export const LeaveBeforeYouArrive: React.FC = () => {
       {/* Colour returns here — but through the interstitial drift.    */}
       {/* Neither sRGB nor P3 renders it correctly. That is the point. */}
       <Sequence from={s(17)} durationInFrames={s(8)}>
-        <Video src="assets/leave-before-you-arrive/cobra.mp4" startFrom={0} ref={cobraVideoRef} />
+        <Video src={staticFile('leave-before-you-arrive/cobra.mp4')} startFrom={0} ref={cobraVideoRef} />
         <VideoEffectStack
           effects={DRIFT_EFFECT}
           videoRef={cobraVideoRef}
