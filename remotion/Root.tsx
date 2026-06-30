@@ -9,7 +9,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="leave-before-you-arrive"
         component={LeaveBeforeYouArrive}
-        durationInFrames={900}
+        durationInFrames={1500}
         fps={30}
         width={1920}
         height={1080}
