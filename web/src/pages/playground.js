@@ -370,15 +370,17 @@ function TrackLane({
   onItemResize,
   onItemRemove,
   onItemClick,
+  onDragEnd,
   selectedId,
   totalSec,
 }) {
   const laneRef = useRef(null);
-  const dragState = useRef(null); // { itemId, type: 'move'|'resize', startX, startSec }
+  const dragState = useRef(null);
 
   const trackItems = items.filter((it) => it.type === track.type);
 
   const onMouseDown = (e, item, action) => {
+    e.preventDefault();
     e.stopPropagation();
     dragState.current = {
       itemId: item.id,
@@ -392,20 +394,19 @@ function TrackLane({
       const dx = me.clientX - dragState.current.startX;
       const ds = dx / PX_PER_SEC;
       if (dragState.current.action === "move") {
-        const newStart = Math.max(0, dragState.current.startSec + ds);
-        onItemMove(item.id, newStart);
+        onItemMove(item.id, Math.max(0, dragState.current.startSec + ds));
       } else {
-        const newDur = Math.max(
-          MIN_CLIP_SEC,
-          dragState.current.startDuration + ds
+        onItemResize(
+          item.id,
+          Math.max(MIN_CLIP_SEC, dragState.current.startDuration + ds)
         );
-        onItemResize(item.id, newDur);
       }
     };
     const onUp = () => {
       dragState.current = null;
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
+      onDragEnd();
     };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
@@ -449,17 +450,9 @@ function TrackLane({
           <span className="text-xs font-mono text-white/90 truncate flex-1 leading-tight select-none">
             {item.name}
           </span>
-          {/* right-edge resize handle */}
-          <div
-            className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize rounded-r hover:bg-white/20"
-            onMouseDown={(e) => {
-              e.stopPropagation();
-              onMouseDown(e, item, "resize");
-            }}
-          />
-          {/* remove */}
+          {/* remove — left of the resize handle so they don't overlap */}
           <button
-            className="absolute top-0.5 right-3 text-white/50 hover:text-white text-xs leading-none"
+            className="absolute top-0.5 right-6 text-white/50 hover:text-white text-xs leading-none z-10"
             onMouseDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation();
@@ -468,6 +461,17 @@ function TrackLane({
           >
             ×
           </button>
+          {/* right-edge resize handle — 6px wide, above everything */}
+          <div
+            className="absolute right-0 top-0 bottom-0 w-6 cursor-ew-resize rounded-r hover:bg-white/30 z-20 flex items-center justify-center"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onMouseDown(e, item, "resize");
+            }}
+          >
+            <div className="w-0.5 h-3/4 bg-white/40 rounded-full" />
+          </div>
         </div>
       ))}
     </div>
@@ -486,6 +490,7 @@ function Timeline({
   onItemResize,
   onItemRemove,
   onItemClick,
+  onDragEnd,
   selectedId,
   playheadSec,
   onScrub,
@@ -569,6 +574,7 @@ function Timeline({
                 onItemResize={onItemResize}
                 onItemRemove={onItemRemove}
                 onItemClick={onItemClick}
+                onDragEnd={onDragEnd}
                 selectedId={selectedId}
                 totalSec={totalSec}
               />
@@ -858,51 +864,59 @@ export default function Playground() {
   }
 
   // Timeline actions
-  const syncTimeline = useCallback((updater) => {
-    setTimelineItems((prev) => {
-      const next = typeof updater === "function" ? updater(prev) : updater;
-      const mee = timelineToMEE(next);
-      if (mee) {
-        setTimelineDriven(true);
-        setSource(mee);
-        // Ensure compiler is loaded
-        import("../lib/mee/index").then((mod) => setCompiler(mod));
-      }
-      return next;
-    });
+  // commitTimeline: called once on drag-end or on add/remove to sync MEE source.
+  // moveItem / resizeItem: update state cheaply during drag without triggering recompile.
+  const commitTimeline = useCallback((items) => {
+    const mee = timelineToMEE(items);
+    if (mee) {
+      setTimelineDriven(true);
+      setSource(mee);
+      import("../lib/mee/index").then((mod) => setCompiler(mod));
+    }
   }, []);
 
   const addItem = useCallback(
     (file, startSec = 0) => {
-      syncTimeline((prev) => [...prev, makeItem(file, startSec)]);
+      setTimelineItems((prev) => {
+        const next = [...prev, makeItem(file, startSec)];
+        commitTimeline(next);
+        return next;
+      });
     },
-    [syncTimeline]
+    [commitTimeline]
   );
 
-  const moveItem = useCallback(
-    (id, startSec) => {
-      syncTimeline((prev) =>
-        prev.map((it) => (it.id === id ? { ...it, startSec } : it))
-      );
-    },
-    [syncTimeline]
-  );
+  // During drag — just update positions, no MEE sync
+  const moveItem = useCallback((id, startSec) => {
+    setTimelineItems((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, startSec } : it))
+    );
+  }, []);
 
-  const resizeItem = useCallback(
-    (id, durationSec) => {
-      syncTimeline((prev) =>
-        prev.map((it) => (it.id === id ? { ...it, durationSec } : it))
-      );
-    },
-    [syncTimeline]
-  );
+  const resizeItem = useCallback((id, durationSec) => {
+    setTimelineItems((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, durationSec } : it))
+    );
+  }, []);
+
+  // On drag end — commit the current state to MEE source
+  const commitDrag = useCallback(() => {
+    setTimelineItems((prev) => {
+      commitTimeline(prev);
+      return prev;
+    });
+  }, [commitTimeline]);
 
   const removeItem = useCallback(
     (id) => {
-      syncTimeline((prev) => prev.filter((it) => it.id !== id));
+      setTimelineItems((prev) => {
+        const next = prev.filter((it) => it.id !== id);
+        commitTimeline(next);
+        return next;
+      });
       setSelectedItem((prev) => (prev?.id === id ? null : prev));
     },
-    [syncTimeline]
+    [commitTimeline]
   );
 
   const selectItem = useCallback((item) => {
@@ -1170,6 +1184,7 @@ export default function Playground() {
               onItemResize={resizeItem}
               onItemRemove={removeItem}
               onItemClick={selectItem}
+              onDragEnd={commitDrag}
               selectedId={selectedItem?.id}
               playheadSec={playheadSec}
               onScrub={setPlayheadSec}

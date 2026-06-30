@@ -7,10 +7,10 @@
     "web"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace=web",
-    "build": "npm run build --workspace=web",
-    "start": "npm run start --workspace=web",
-    "lint": "npm run lint --workspace=web",
+    "dev": "cd web && npx next dev",
+    "build": "cd web && npx next build",
+    "start": "cd web && npx next start",
+    "lint": "cd web && npx next lint",
     "validate": "python src/advalidation/run_all.py",
     "studio": "remotion studio remotion/index.ts",
     "render": "remotion render remotion/index.ts"
