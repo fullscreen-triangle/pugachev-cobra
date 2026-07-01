@@ -245,13 +245,13 @@ function PeriodicLayers({
 
 export const GenericComposition: React.FC<GenericCompositionProps> = ({
   ir,
-  mediaBase = '',
+  mediaBase = '/api/media-file?path',
 }) => {
   const { fps, durationInFrames } = useVideoConfig();
   const totalSec = durationInFrames / fps;
 
-  const clip = firstClip(ir);
-  const audios = collectAll<IRAudio>(ir, 'IRAudio');
+  const clips   = collectAll<IRClip>(ir, 'IRClip');
+  const audios  = collectAll<IRAudio>(ir, 'IRAudio');
   const segments = collectAll<IRSegment>(ir, 'IRSegment');
   const periodics = collectAll<IRPeriodic>(ir, 'IRPeriodic');
   const globalPrims = collectAll<IRPrim>(ir, 'IRPrim').filter(
@@ -263,20 +263,15 @@ export const GenericComposition: React.FC<GenericCompositionProps> = ({
 
   const src = (filePath: string) => {
     if (filePath.startsWith('http') || filePath.startsWith('/api/')) return filePath;
-    // mediaBase is the query-param prefix, e.g. "/api/media-file?path="
     return `${mediaBase}=${encodeURIComponent(filePath)}`;
   };
 
+  // For multi-clip scenes the `at` field is the composition timeline position,
+  // and `duration` is how long it plays. Each clip starts at frame 0 of its file.
+  const isMultiClip = clips.length > 1;
+
   return (
     <AbsoluteFill style={{ backgroundColor: '#000' }}>
-      {/* ---- Video clip ---- */}
-      {clip && (
-        <Video
-          src={src(clip.path)}
-          startFrom={Math.round(clip.at * fps)}
-          muted={muteVideo}
-        />
-      )}
 
       {/* ---- Audio tracks ---- */}
       {audios.map((a, i) => (
@@ -287,6 +282,26 @@ export const GenericComposition: React.FC<GenericCompositionProps> = ({
           volume={a.volume}
         />
       ))}
+
+      {/* ---- Video clips ---- */}
+      {isMultiClip
+        ? clips.map((clip, i) => (
+            <Sequence
+              key={i}
+              from={Math.round(clip.at * fps)}
+              durationInFrames={Math.round(clip.duration * fps)}
+            >
+              <Video src={src(clip.path)} startFrom={0} muted={muteVideo} />
+            </Sequence>
+          ))
+        : clips.length === 1 && (
+            <Video
+              src={src(clips[0].path)}
+              startFrom={Math.round(clips[0].at * fps)}
+              muted={muteVideo}
+            />
+          )
+      }
 
       {/* ---- Global prim overlays ---- */}
       {globalPrims.map((prim, i) => (
@@ -302,6 +317,7 @@ export const GenericComposition: React.FC<GenericCompositionProps> = ({
       {periodics.map((per, i) => (
         <PeriodicLayers key={i} per={per} totalDuration={totalSec} fps={fps} />
       ))}
+
     </AbsoluteFill>
   );
 };
@@ -318,8 +334,11 @@ export interface CompositionConfig {
 }
 
 export function irToConfig(ir: IRNode, fps = 30): CompositionConfig {
-  const clip = firstClip(ir);
-  const durationSec = clip?.duration ?? 30;
+  const clips = collectAll<IRClip>(ir, 'IRClip');
+  // For multi-clip: total duration = end of the last clip (at + duration)
+  const durationSec = clips.length > 0
+    ? Math.max(...clips.map(c => c.at + c.duration))
+    : 30;
   return {
     durationInFrames: Math.ceil(durationSec * fps),
     fps,

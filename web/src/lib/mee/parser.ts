@@ -65,6 +65,15 @@ export function parse(tokens: Token[]): ParseResult {
     const brands: BrandNode[] = [];
     let dispatch: DispatchNode | null = null;
 
+    // Keywords that are pipeline steps (can appear bare at scene level)
+    const PIPELINE_KW = new Set([
+      'clip', 'audio', 'at', 'every',
+      'acts_like', 'compose', 'render',
+      'detect', 'select', 'apply_to_selection', 'for_each', 'shader',
+    ]);
+
+    const steps: PipelineStep[] = [];
+
     while (peek().kind !== 'RBRACE' && peek().kind !== 'EOF') {
       const t = peek();
 
@@ -75,12 +84,32 @@ export function parse(tokens: Token[]): ParseResult {
         if (b) brands.push(b);
       } else if (t.kind === 'KEYWORD' && t.value === 'dispatch') {
         dispatch = parseDispatch();
-      } else if (t.kind === 'KEYWORD' && t.value === 'clip') {
-        pipeline = parsePipeline();
+      } else if (t.kind === 'KEYWORD' && PIPELINE_KW.has(t.value)) {
+        // Each pipeline keyword at scene level adds to the shared step list
+        if (t.value === 'clip') {
+          const clip = parseClip();
+          if (clip) steps.push(clip);
+        } else {
+          const step = parseNamedStep(t);
+          if (step) steps.push(step);
+        }
+      } else if (t.kind === 'PIPE') {
+        // |> between steps — skip the pipe and parse the next step
+        advance();
+        const next = peek();
+        if (next.kind !== 'EOF' && next.kind !== 'RBRACE') {
+          const step = parseNamedStep(next);
+          if (step) steps.push(step);
+        }
       } else {
         advance();
       }
     }
+
+    if (steps.length > 0) {
+      pipeline = { kind: 'Pipeline', steps };
+    }
+
     eat('RBRACE');
 
     return { kind: 'Scene', name: nameToken.value, pipeline, goal, brands, dispatch };

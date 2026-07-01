@@ -69,7 +69,36 @@ const DRUM_SOURCE = `scene drum_impact {
   }
 }`;
 
+const LBYA_SOURCE = `scene leave_before_you_arrive {
+
+  audio("leave-before-you-arrive/face-off-clip.mp3")
+
+  clip("leave-before-you-arrive/sequence/01_gibbon-01.mp4",        at=0s,  for=4s)
+  clip("leave-before-you-arrive/sequence/02_beamon-01.mp4",        at=4s,  for=3s)
+  clip("leave-before-you-arrive/sequence/03_powell-01.mp4",        at=7s,  for=3s)
+  clip("leave-before-you-arrive/sequence/04_zoom-climb-01.mp4",    at=10s, for=4s)
+  clip("leave-before-you-arrive/sequence/05_powell-last1s.mp4",    at=14s, for=1s)
+  clip("leave-before-you-arrive/sequence/06_beamon-01-last1s.mp4", at=15s, for=1s)
+  clip("leave-before-you-arrive/sequence/07_lufthansa-jump-02.mp4",at=16s, for=4s)
+  clip("leave-before-you-arrive/sequence/08_beamon-02.mp4",        at=20s, for=4s)
+  clip("leave-before-you-arrive/sequence/09_lufthansa-jump.mp4",   at=24s, for=6s)
+  clip("leave-before-you-arrive/sequence/10_powell-01-full.mp4",   at=30s, for=4s)
+  clip("leave-before-you-arrive/sequence/11_longjump-4to7.mp4",    at=34s, for=3s)
+  clip("leave-before-you-arrive/sequence/12_beamon-02-full.mp4",   at=37s, for=6s)
+  clip("leave-before-you-arrive/sequence/13_zoom-climb-02.mp4",    at=43s, for=7s)
+
+  at 0s-43s:  bw()
+  at 1s-5s:   text("do you happen to not be interested in a lot", color: "#ffffff")
+  at 17s-21s: text("is now the only thirst that should be quenched", color: "#ffffff")
+  at 26s-30s: text("is it necessary to make an entrance", color: "#ffffff")
+  at 45s-46s: glitch(intensity: 0.6)
+  at 46s-49s: text("leave before you arrive", color: "#ffffff")
+  at 48s-50s: text("the only solution is to arrive before you leave", color: "#ffffff")
+
+}`;
+
 const EXAMPLES = [
+  { label: "Leave Before You Arrive", source: LBYA_SOURCE },
   { label: "Mbende", source: MBENDE_SOURCE },
   { label: "Water Surface", source: DEFAULT_SOURCE },
   { label: "Drum Skin", source: DRUM_SOURCE },
@@ -116,6 +145,48 @@ function makeItem(file, startSec = 0) {
     durationSec: file.type === "audio" ? 180 : 30, // default durations
     sizeKb: file.sizeKb,
   };
+}
+
+// Pre-built timeline for "Leave Before You Arrive"
+// Each entry: [filename, startSec, durationSec, humanLabel]
+const LBYA_SEQUENCE = [
+  ["01_gibbon-01.mp4", 0, 4, "gibbon — rooftop run"],
+  ["02_beamon-01.mp4", 4, 3, "beamon — approach"],
+  ["03_powell-01.mp4", 7, 3, "powell — stride"],
+  ["04_zoom-climb-01.mp4", 10, 4, "climb — ascent"],
+  ["05_powell-last1s.mp4", 14, 1, "powell — last step"],
+  ["06_beamon-01-last1s.mp4", 15, 1, "beamon — last step"],
+  ["07_lufthansa-jump-02.mp4", 16, 4, "lufthansa — leap"],
+  ["08_beamon-02.mp4", 20, 4, "beamon — flight"],
+  ["09_lufthansa-jump.mp4", 24, 6, "lufthansa — hang"],
+  ["10_powell-01-full.mp4", 30, 4, "powell — full run"],
+  ["11_longjump-4to7.mp4", 34, 3, "longjump — peak"],
+  ["12_beamon-02-full.mp4", 37, 6, "beamon — landing"],
+  ["13_zoom-climb-02.mp4", 43, 7, "climb — cobra"],
+];
+
+function makeLBYATimeline() {
+  const base = "/api/media-file?path=leave-before-you-arrive%2Fsequence%2F";
+  const items = LBYA_SEQUENCE.map(([file, startSec, durationSec, label]) => ({
+    id: _nextId++,
+    url: base + encodeURIComponent(file),
+    name: label,
+    type: "video",
+    startSec,
+    durationSec,
+    sizeKb: 0,
+  }));
+  // Audio track
+  items.push({
+    id: _nextId++,
+    url: "/api/media-file?path=leave-before-you-arrive%2Fface-off-clip.mp3",
+    name: "face-off-clip.mp3",
+    type: "audio",
+    startSec: 0,
+    durationSec: 50,
+    sizeKb: 0,
+  });
+  return items;
 }
 
 // ---- sub-components --------------------------------------------------
@@ -670,9 +741,13 @@ function CompositionPreview({ ir, compositionId, onRender }) {
           {Math.round(cfg.durationInFrames / cfg.fps)}s
         </span>
         {renderResult?.ok && (
-          <span className="text-xs font-mono text-green-500 truncate">
-            ✓ {renderResult.path}
-          </span>
+          <a
+            href={`/api/download?path=${encodeURIComponent(renderResult.path)}`}
+            download
+            className="text-xs font-mono text-green-500 underline hover:text-green-400"
+          >
+            ↓ download mp4
+          </a>
         )}
         {renderResult?.error && (
           <span className="text-xs font-mono text-red-500 truncate">
@@ -763,14 +838,14 @@ function PreviewPanel({
 // ---- Main component --------------------------------------------------
 
 export default function Playground() {
-  const [source, setSource] = useState(MBENDE_SOURCE);
+  const [source, setSource] = useState(LBYA_SOURCE);
   const [result, setResult] = useState(null);
   const [summary, setSummary] = useState(null);
   const [isCompiling, setIsCompiling] = useState(false);
   const [compiler, setCompiler] = useState(null);
 
   // Timeline state
-  const [timelineItems, setTimelineItems] = useState([]);
+  const [timelineItems, setTimelineItems] = useState(() => makeLBYATimeline());
   const [selectedItem, setSelectedItem] = useState(null);
   const [playheadSec, setPlayheadSec] = useState(0);
 
