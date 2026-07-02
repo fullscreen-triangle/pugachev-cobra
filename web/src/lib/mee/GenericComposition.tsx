@@ -126,6 +126,88 @@ function TextOverlay({
   );
 }
 
+function ScanlinesOverlay({
+  lineCount = 480,
+  intensity = 0.3,
+}: {
+  lineCount?: number;
+  intensity?: number;
+}) {
+  // CSS repeating-linear-gradient approximation of the scanlines shader
+  const lineH = 100 / lineCount;
+  const darkStop = `rgba(0,0,0,${intensity})`;
+  return (
+    <AbsoluteFill
+      style={{
+        backgroundImage: `repeating-linear-gradient(
+          to bottom,
+          transparent 0%,
+          transparent ${lineH * 0.5}%,
+          ${darkStop} ${lineH * 0.5}%,
+          ${darkStop} ${lineH}%
+        )`,
+        pointerEvents: 'none',
+        mixBlendMode: 'multiply',
+      }}
+    />
+  );
+}
+
+// Animated bounding-box overlay for detect(person)/boxes().
+// Without a live inference runtime in the browser we show a stylised
+// tracking rectangle that oscillates slightly — it signals the effect
+// is active in preview; the render pipeline can swap in real boxes.
+function DetectBoxesOverlay() {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const t = frame / fps;
+
+  // Gentle drift so the box looks "tracked" rather than static
+  const dx = Math.sin(t * 0.7) * 12;
+  const dy = Math.cos(t * 0.5) * 8;
+
+  return (
+    <AbsoluteFill style={{ pointerEvents: 'none' }}>
+      {/* Primary subject box */}
+      <div
+        style={{
+          position: 'absolute',
+          left: `calc(35% + ${dx}px)`,
+          top: `calc(10% + ${dy}px)`,
+          width: '30%',
+          height: '75%',
+          border: '2px solid #00ff88',
+          boxSizing: 'border-box',
+        }}
+      />
+      {/* Corner ticks — top-left */}
+      <div style={{ position: 'absolute', left: `calc(35% + ${dx}px)`, top: `calc(10% + ${dy}px)`, width: 16, height: 16, borderTop: '3px solid #00ff88', borderLeft: '3px solid #00ff88' }} />
+      {/* top-right */}
+      <div style={{ position: 'absolute', left: `calc(65% + ${dx}px - 16px)`, top: `calc(10% + ${dy}px)`, width: 16, height: 16, borderTop: '3px solid #00ff88', borderRight: '3px solid #00ff88' }} />
+      {/* bottom-left */}
+      <div style={{ position: 'absolute', left: `calc(35% + ${dx}px)`, top: `calc(85% + ${dy}px - 16px)`, width: 16, height: 16, borderBottom: '3px solid #00ff88', borderLeft: '3px solid #00ff88' }} />
+      {/* bottom-right */}
+      <div style={{ position: 'absolute', left: `calc(65% + ${dx}px - 16px)`, top: `calc(85% + ${dy}px - 16px)`, width: 16, height: 16, borderBottom: '3px solid #00ff88', borderRight: '3px solid #00ff88' }} />
+      {/* Label */}
+      <div
+        style={{
+          position: 'absolute',
+          left: `calc(35% + ${dx}px + 4px)`,
+          top: `calc(10% + ${dy}px - 22px)`,
+          color: '#00ff88',
+          fontFamily: 'monospace',
+          fontSize: 13,
+          letterSpacing: '0.08em',
+          background: 'rgba(0,0,0,0.55)',
+          padding: '1px 6px',
+        }}
+      >
+        person {(0.88 + Math.sin(t) * 0.04).toFixed(2)}
+      </div>
+    </AbsoluteFill>
+  );
+}
+
 function PrimOverlay({ prim }: { prim: IRPrim }) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -144,6 +226,22 @@ function PrimOverlay({ prim }: { prim: IRPrim }) {
       const fontSize = Number(prim.params.size ?? 96);
       return <TextOverlay text={text} color={color} fontSize={fontSize} />;
     }
+
+    case 'scanlines':
+      return (
+        <ScanlinesOverlay
+          lineCount={Number(prim.params.lineCount ?? 480)}
+          intensity={Number(prim.params.intensity ?? 0.3)}
+        />
+      );
+
+    // detect(person) is a marker — the boxes() primitive renders the overlay.
+    // Both together on the same segment produce the detection UI.
+    case 'detect':
+      return null;
+
+    case 'boxes':
+      return <DetectBoxesOverlay />;
 
     default: {
       // Registered spatial/photometric prims — express as CSS filter/transform

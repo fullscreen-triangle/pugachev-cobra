@@ -5,6 +5,20 @@ The player updates live as you type. All times are in seconds.
 
 ---
 
+## How to "execute" the code — see effects live
+
+There is **no run button**. The playground is a live IDE:
+
+1. Open **http://localhost:3000/playground** (run `npx next dev` from the `web/` folder if it isn't running)
+2. The DSL editor is on the left. The Remotion player is on the right.
+3. **Edit anything in the editor → the player updates automatically** after a short debounce (~600ms).
+4. Hit **play** in the player to watch the composition. Scrub the timeline bar to jump to any frame.
+5. To try an effect, add an `at` line in the editor — e.g. `at 5s-8s: bw()` — and pause typing. The player will show it within a second.
+
+The green **ok** indicator at the top of the editor means the DSL compiled without errors. A red indicator shows parse/check errors inline.
+
+---
+
 ## How the DSL works
 
 ```
@@ -77,6 +91,52 @@ color: "#aaaaaa"    ← grey
 
 ---
 
+## Scanlines
+
+CRT-style horizontal scanlines over a time window:
+
+```
+at 10s-14s: scanlines()
+at 43s-50s: scanlines()
+```
+
+Parameters (all optional):
+
+```
+at 10s-14s: scanlines(lineCount: 240, intensity: 0.5)
+```
+
+- `lineCount` — number of scan lines across the frame (default 480; lower = thicker lines)
+- `intensity` — how dark the dark bands are, 0.0–1.0 (default 0.3)
+
+Heavy CRT look:
+
+```
+at 43s-50s: scanlines(lineCount: 120, intensity: 0.6)
+```
+
+---
+
+## Object detection — detect(person) + boxes()
+
+Draws tracking bounding boxes around detected people for a time range:
+
+```
+at 4s-7s:  detect(person), boxes()
+```
+
+Use both on the same line — `detect(person)` marks the target, `boxes()` draws the UI:
+
+```
+at 20s-24s: detect(person), boxes()
+at 30s-34s: detect(person), boxes()
+```
+
+The preview shows an animated placeholder box (green corners, confidence readout).
+For the final render the detection pipeline runs frame-accurate inference.
+
+---
+
 ## Combining effects on the same segment
 
 ```
@@ -107,6 +167,20 @@ scene leave_before_you_arrive {
   clip("leave-before-you-arrive/sequence/13_zoom-climb-02.mp4",    at=43s, for=7s)
 
   at 0s-43s:  bw()
+
+  // object detection — beamon and powell sequences
+  at 4s-7s:   detect(person), boxes()
+  at 7s-10s:  detect(person), boxes()
+  at 14s-15s: detect(person), boxes()
+  at 15s-16s: detect(person), boxes()
+  at 20s-24s: detect(person), boxes()
+  at 30s-34s: detect(person), boxes()
+  at 37s-43s: detect(person), boxes()
+
+  // scanlines — zoom-climb segments
+  at 10s-14s: scanlines()
+  at 43s-50s: scanlines()
+
   at 1s-5s:   text("do you happen to not be interested in a lot", color: "#ffffff")
   at 17s-21s: text("is now the only thirst that should be quenched", color: "#ffffff")
   at 26s-30s: text("is it necessary to make an entrance", color: "#ffffff")

@@ -88,6 +88,20 @@ const LBYA_SOURCE = `scene leave_before_you_arrive {
   clip("leave-before-you-arrive/sequence/13_zoom-climb-02.mp4",    at=43s, for=7s)
 
   at 0s-43s:  bw()
+
+  // object detection — beamon and powell sequences
+  at 4s-7s:   detect(person), boxes()
+  at 7s-10s:  detect(person), boxes()
+  at 14s-15s: detect(person), boxes()
+  at 15s-16s: detect(person), boxes()
+  at 20s-24s: detect(person), boxes()
+  at 30s-34s: detect(person), boxes()
+  at 37s-43s: detect(person), boxes()
+
+  // scanlines — zoom-climb segments
+  at 10s-14s: scanlines()
+  at 43s-50s: scanlines()
+
   at 1s-5s:   text("do you happen to not be interested in a lot", color: "#ffffff")
   at 17s-21s: text("is now the only thirst that should be quenched", color: "#ffffff")
   at 26s-30s: text("is it necessary to make an entrance", color: "#ffffff")
