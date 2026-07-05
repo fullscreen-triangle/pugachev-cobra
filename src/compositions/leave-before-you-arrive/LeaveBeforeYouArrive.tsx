@@ -31,8 +31,6 @@ import {
   staticFile,
 } from 'remotion';
 import React from 'react';
-import { VideoEffectStack } from '@/effects/video/remotion/VideoEffectStack';
-import { getVideoEffect } from '@/effects/video/registry';
 
 // ---- Helpers ---------------------------------------------------------
 
@@ -126,17 +124,53 @@ const BWOverlay: React.FC = () => (
   />
 );
 
-// ---- Drift effect spec -----------------------------------------------
+// ---- Scanlines overlay -----------------------------------------------
 
-const DRIFT_EFFECT = [
-  { effect: getVideoEffect('chromatic.interstitialDrift')!, params: { drift: 0.6 } },
-];
+const ScanlinesOverlay: React.FC<{ lineCount?: number; intensity?: number }> = ({
+  lineCount = 480,
+  intensity = 0.35,
+}) => {
+  const lineH = 100 / lineCount;
+  return (
+    <AbsoluteFill
+      style={{
+        backgroundImage: `repeating-linear-gradient(
+          to bottom,
+          transparent 0%,
+          transparent ${lineH * 0.5}%,
+          rgba(0,0,0,${intensity}) ${lineH * 0.5}%,
+          rgba(0,0,0,${intensity}) ${lineH}%
+        )`,
+        pointerEvents: 'none',
+        mixBlendMode: 'multiply',
+      }}
+    />
+  );
+};
+
+// ---- Detect boxes overlay -------------------------------------------
+
+const DetectBoxesOverlay: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const t = frame / fps;
+  const dx = Math.sin(t * 0.7) * 12;
+  const dy = Math.cos(t * 0.5) * 8;
+  const conf = (0.88 + Math.sin(t) * 0.04).toFixed(2);
+  return (
+    <AbsoluteFill style={{ pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', left: `calc(35% + ${dx}px)`, top: `calc(10% + ${dy}px)`, width: '30%', height: '75%', border: '2px solid #00ff88', boxSizing: 'border-box' }} />
+      <div style={{ position: 'absolute', left: `calc(35% + ${dx}px)`, top: `calc(10% + ${dy}px - 22px)`, color: '#00ff88', fontFamily: 'monospace', fontSize: 13, background: 'rgba(0,0,0,0.55)', padding: '1px 6px' }}>
+        person {conf}
+      </div>
+    </AbsoluteFill>
+  );
+};
 
 // ---- Main composition ------------------------------------------------
 
 export const LeaveBeforeYouArrive: React.FC = () => {
   const { fps } = useVideoConfig();
-  const lastVideoRef = React.useRef<HTMLVideoElement>(null);
 
   const s = (sec: number) => Math.round(sec * fps);
 
@@ -144,7 +178,7 @@ export const LeaveBeforeYouArrive: React.FC = () => {
     <AbsoluteFill style={{ backgroundColor: '#000' }}>
 
       {/* ---- Audio — runs the full 50s -------------------------------- */}
-      <Audio src={staticFile('leave-before-you-arrive/face-off-clip.mp3')} startFrom={0} />
+      <Audio src={staticFile('leave-before-you-arrive/merikan-face-off-clip.mp3')} startFrom={0} />
 
       {/* ================================================================
           CLIPS
@@ -158,34 +192,39 @@ export const LeaveBeforeYouArrive: React.FC = () => {
         <BWOverlay />
       </Sequence>
 
-      {/* 04–07s  beamon-01 (first 3s) */}
+      {/* 04–07s  beamon-01 */}
       <Sequence from={s(4)} durationInFrames={s(3)}>
         <Video src={p('02_beamon-01.mp4')} startFrom={0} />
         <BWOverlay />
+        <DetectBoxesOverlay />
       </Sequence>
 
-      {/* 07–10s  powell-01 (first 3s) */}
+      {/* 07–10s  powell-01 */}
       <Sequence from={s(7)} durationInFrames={s(3)}>
         <Video src={p('03_powell-01.mp4')} startFrom={0} />
         <BWOverlay />
+        <DetectBoxesOverlay />
       </Sequence>
 
-      {/* 10–14s  zoom-climb-01 */}
+      {/* 10–14s  zoom-climb-01 + scanlines */}
       <Sequence from={s(10)} durationInFrames={s(4)}>
         <Video src={p('04_zoom-climb-01.mp4')} startFrom={0} />
         <BWOverlay />
+        <ScanlinesOverlay />
       </Sequence>
 
       {/* 14–15s  powell last 1s */}
       <Sequence from={s(14)} durationInFrames={s(1)}>
         <Video src={p('05_powell-last1s.mp4')} startFrom={0} />
         <BWOverlay />
+        <DetectBoxesOverlay />
       </Sequence>
 
       {/* 15–16s  beamon-01 last 1s */}
       <Sequence from={s(15)} durationInFrames={s(1)}>
         <Video src={p('06_beamon-01-last1s.mp4')} startFrom={0} />
         <BWOverlay />
+        <DetectBoxesOverlay />
       </Sequence>
 
       {/* 16–20s  lufthansa-jump-02 */}
@@ -194,13 +233,14 @@ export const LeaveBeforeYouArrive: React.FC = () => {
         <BWOverlay />
       </Sequence>
 
-      {/* 20–24s  beamon-02 (first 4s) */}
+      {/* 20–24s  beamon-02 */}
       <Sequence from={s(20)} durationInFrames={s(4)}>
         <Video src={p('08_beamon-02.mp4')} startFrom={0} />
         <BWOverlay />
+        <DetectBoxesOverlay />
       </Sequence>
 
-      {/* 24–30s  lufthansa-jump (first 6s) */}
+      {/* 24–30s  lufthansa-jump */}
       <Sequence from={s(24)} durationInFrames={s(6)}>
         <Video src={p('09_lufthansa-jump.mp4')} startFrom={0} />
         <BWOverlay />
@@ -210,6 +250,7 @@ export const LeaveBeforeYouArrive: React.FC = () => {
       <Sequence from={s(30)} durationInFrames={s(4)}>
         <Video src={p('10_powell-01-full.mp4')} startFrom={0} />
         <BWOverlay />
+        <DetectBoxesOverlay />
       </Sequence>
 
       {/* 34–37s  longjump 4s–7s */}
@@ -222,17 +263,13 @@ export const LeaveBeforeYouArrive: React.FC = () => {
       <Sequence from={s(37)} durationInFrames={s(6)}>
         <Video src={p('12_beamon-02-full.mp4')} startFrom={0} />
         <BWOverlay />
+        <DetectBoxesOverlay />
       </Sequence>
 
-      {/* 43–50s  zoom-climb-02 — colour returns through drift */}
+      {/* 43–50s  zoom-climb-02 + scanlines, colour returns */}
       <Sequence from={s(43)} durationInFrames={s(7)}>
-        <Video src={p('13_zoom-climb-02.mp4')} startFrom={0} ref={lastVideoRef} />
-        <VideoEffectStack
-          effects={DRIFT_EFFECT}
-          videoRef={lastVideoRef}
-          width={1920}
-          height={1080}
-        />
+        <Video src={p('13_zoom-climb-02.mp4')} startFrom={0} />
+        <ScanlinesOverlay lineCount={240} intensity={0.4} />
       </Sequence>
 
       {/* ================================================================

@@ -1,0 +1,1 @@
+[0:v]drawtext=fontfile=renders/cour.ttf:text='Hello':fontsize=60:fontcolor=0xFFFFFFFF:x=100:y=100:alpha=if(between(t\,20\,32)\,1\,0):enable='between(t\,20\,32)'[vout]
