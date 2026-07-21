@@ -1,0 +1,10 @@
+# Core CV stack for detection + pixel-layer passes.
+opencv-python>=4.8
+numpy>=1.24
+ultralytics>=8.0        # YOLOv8 detector (auto-downloads weights)
+
+# Optional: the real vibrio framework. If importable, its HumanDetector is
+# preferred over the direct ultralytics path. Install from source:
+#   pip install git+https://github.com/fullscreen-triangle/vibrio.git
+# The pre-pass runs without it (falls back to ultralytics, then to an
+# empty-but-valid timeline).
